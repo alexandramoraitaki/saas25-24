@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_PASSWORD: dreamteam25
+      POSTGRES_DB: clearsky
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  grades-service:
+    build: ./grades-service
+    container_name: grades-service
+    ports:
+      - "5003:5003"
+    depends_on:
+      - postgres
+    env_file:
+      - ./grades-service/.env
+
+volumes:
+  pgdata:
