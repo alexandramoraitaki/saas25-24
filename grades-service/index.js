@@ -13,7 +13,7 @@ app.post('/grades/upload', upload.single('file'), async (req, res) => {
     try {
         const workbook = xlsx.readFile(req.file.path);
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const data = xlsx.utils.sheet_to_json(sheet, { range: 3 });
+        const data = xlsx.utils.sheet_to_json(sheet, { range: 2 });
 
         for (const row of data) {
             await pool.query(
