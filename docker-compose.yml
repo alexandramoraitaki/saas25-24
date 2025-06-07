@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgres:15
     container_name: postgres
     environment:
       POSTGRES_PASSWORD: dreamteam25
@@ -9,6 +9,7 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+
 
   grades-service:
     build: ./grades-service
@@ -19,6 +20,50 @@ services:
       - postgres
     env_file:
       - ./grades-service/.env
+
+
+  stats-service:
+    build: ./stats-service
+    container_name: stats-service
+    ports:
+      - "5004:5004"
+    depends_on:
+      - postgres
+    env_file:
+      - ./stats-service/.env
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    ports:
+      - "5005:5005"
+    depends_on:
+      - postgres
+    env_file:
+      - ./user-service/.env
+
+  review-service:
+    build: ./review-service
+    ports:
+      - "5006:5006"
+    depends_on:
+      - postgres
+    env_file:
+      - ./review-service/.env
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user-service
+      - grades-service
+      - stats-service
+      - review-service
+
+
+
+
 
 volumes:
   pgdata:
