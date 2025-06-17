@@ -61,9 +61,5 @@ services:
       - stats-service
       - review-service
 
-
-
-
-
 volumes:
   pgdata:
