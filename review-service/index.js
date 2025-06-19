@@ -67,20 +67,38 @@ app.patch('/reviews/:id', async (req, res) => {
     return res.status(403).send('Forbidden: Only teachers can respond to reviews');
   }
 
+
   const { id } = req.params;
-  const { status, response } = req.body;
+  const { status, response, new_grade } = req.body;
+
 
   try {
-    const result = await pool.query(
+    // 1. Ενημέρωσε το review και πάρε το grade_id που σχετίζεται
+    const reviewUpdate = await pool.query(
       `UPDATE review_requests
        SET status = $1, response = $2, responded_at = CURRENT_TIMESTAMP
-       WHERE review_id = $3`,
+       WHERE review_id = $3
+       RETURNING grade_id`,
       [status, response, id]
     );
 
-    if (result.rowCount === 0) {
+
+    if (reviewUpdate.rowCount === 0) {
       return res.status(404).send('Review request not found');
     }
+
+
+    const gradeId = reviewUpdate.rows[0].grade_id;
+
+
+    // 2. Αν accepted και υπάρχει new_grade → ενημέρωσε και τον βαθμό
+    if (status === 'accepted' && new_grade !== undefined) {
+      await pool.query(
+        `UPDATE grades SET grade = $1 WHERE grades_id = $2`,
+        [new_grade, gradeId]
+      );
+    }
+
 
     res.send('Review request updated');
   } catch (err) {
@@ -89,6 +107,3 @@ app.patch('/reviews/:id', async (req, res) => {
   }
 });
 
-app.listen(5006, () => {
-  console.log('Review service running on port 5006');
-});

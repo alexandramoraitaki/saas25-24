@@ -3,10 +3,10 @@ import axios from 'axios';
 import '../Theme.css';
 
 export default function UploadInitial() {
-  const [file, setFile]     = useState(null);
+  const [file, setFile] = useState(null);
   const [course, setCourse] = useState('');
   const [period, setPeriod] = useState('');
-  const [count, setCount]   = useState(null);
+  const [count, setCount] = useState(null);
   const [message, setMessage] = useState('');
 
   const handleFileChange = e => {
@@ -40,7 +40,7 @@ export default function UploadInitial() {
   };
 
   const handleConfirm = () => setMessage('✔️ Επιβεβαίωση στοιχείων');
-  const handleCancel  = () => {
+  const handleCancel = () => {
     setFile(null); setCourse(''); setPeriod(''); setCount(null); setMessage('');
   };
 
@@ -50,9 +50,9 @@ export default function UploadInitial() {
         <h2>INITIAL GRADES POSTING</h2>
         <form onSubmit={handleUpload} className="form-grid">
           <input type="file"
-                 accept=".xlsx"
-                 onChange={handleFileChange}
-                 className="input-file" />
+            accept=".xlsx"
+            onChange={handleFileChange}
+            className="input-file" />
           <button type="submit" className="btn btn-primary">
             Submit Initial Grades
           </button>
@@ -63,15 +63,15 @@ export default function UploadInitial() {
         <h2>XLSX File Parsing</h2>
         <div className="form-grid">
           <input type="text" value={course} onChange={e => setCourse(e.target.value)}
-                 className="input" placeholder="Course name" />
+            className="input" placeholder="Course name" />
           <input type="text" value={period} onChange={e => setPeriod(e.target.value)}
-                 className="input" placeholder="Exam period"/>
+            className="input" placeholder="Exam period" />
           <input type="text" value={count ?? ''} readOnly
-                 className="input" placeholder="Number of grades" />
+            className="input" placeholder="Number of grades" />
         </div>
         <div className="btn-group">
           <button onClick={handleConfirm} className="btn btn-primary">CONFIRM</button>
-          <button onClick={handleCancel}  className="btn btn-secondary">CANCEL</button>
+          <button onClick={handleCancel} className="btn btn-secondary">CANCEL</button>
         </div>
       </div>
 
