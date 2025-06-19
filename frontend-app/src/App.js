@@ -22,7 +22,7 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          
+
           {/* Student Routes */}
           <Route
             path="/student"

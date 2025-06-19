@@ -107,3 +107,7 @@ app.patch('/reviews/:id', async (req, res) => {
   }
 });
 
+
+app.listen(5006, () => {
+  console.log('Review service running on port 5006');
+});

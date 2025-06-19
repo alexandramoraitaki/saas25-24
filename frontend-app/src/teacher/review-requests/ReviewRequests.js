@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import '../Theme.css';
+import '../../App.css';
+
 
 export default function ReviewRequests() {
-  const [cls, setCls]     = useState('');
+  const [cls, setCls] = useState('');
   const [requests, setRequests] = useState([]);
   const [error, setError] = useState('');
   const navigate = useNavigate();

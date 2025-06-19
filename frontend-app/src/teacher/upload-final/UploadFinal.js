@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import '../Theme.css';
+import '../../App.css';
+
 
 export default function UploadFinal() {
     const [cls, setCls] = useState('');

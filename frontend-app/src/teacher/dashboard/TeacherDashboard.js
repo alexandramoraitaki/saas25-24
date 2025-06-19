@@ -1,8 +1,9 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import '../Theme.css';
+import { useNavigate } from 'react-router-dom';
+import '../../App.css';
 
 export default function TeacherDashboard() {
+  const navigate = useNavigate();
   const name = localStorage.getItem('full_name') || 'Καθηγητής';
 
   const actions = [
@@ -25,19 +26,25 @@ export default function TeacherDashboard() {
   ];
 
   return (
-    <div className="page-container">
-      <h1 className="greeting">Καλώς ήρθες, {name} 👋</h1>
-      <p className="subtitle">Επίλεξε τι θα ήθελες να κάνεις :</p>
+    <div className="center-screen">
+      <div className="page-container">
+        <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
+          <h1 className="greeting">Welcome, {name} 👋</h1>
+          <p className="subtitle">Επίλεξε τι θα ήθελες να κάνεις :</p>
 
-      <div className="actions-grid fixed-2x2">
-        {actions.map(({ label, path }) => (
-          <Link to={path} key={label} className="action-card">
-            <div className="card-content">
-              <h3>{label}</h3>
-              <span>➜</span>
-            </div>
-          </Link>
-        ))}
+          <div className="form-grid">
+            {actions.map(({ label, path }) => (
+              <button
+                key={label}
+                onClick={() => navigate(path)}
+                className="btn btn-primary"
+                style={{ width: '100%' }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

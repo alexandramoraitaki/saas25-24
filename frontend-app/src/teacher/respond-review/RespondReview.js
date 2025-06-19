@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import '../Theme.css';
+import '../../App.css';
+
 
 export default function RespondReview() {
   const { id } = useParams();
@@ -33,7 +34,7 @@ export default function RespondReview() {
           <label>
             Επιλογή:
             <select value={status} onChange={e => setStatus(e.target.value)}
-                    className="select">
+              className="select">
               <option value="approved">Εγκρίνεται</option>
               <option value="rejected">Απορρίπτεται</option>
             </select>

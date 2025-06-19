@@ -3,7 +3,8 @@ import axios from 'axios';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import '../Theme.css';
+import '../../App.css';
+
 
 export default function ClassStats() {
   const [className, setClassName] = useState('');
