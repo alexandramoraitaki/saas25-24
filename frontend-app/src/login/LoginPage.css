@@ -1,5 +1,6 @@
-/* LoginPage.css */
-/* Γενικά */
+/* === Login Page Styling === */
+
+/* Γενικά reset */
 * {
   box-sizing: border-box;
 }
@@ -8,11 +9,12 @@ body, html, #root {
   height: 100%;
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #2c3e50, #34495e, #4a6072); /* ουδέτερο μπλε/γκρι */
+  background: linear-gradient(135deg, #2c3e50, #34495e, #4a6072);
   color: white;
+  text-align: center;
 }
 
-/* Container κεντράρισμα */
+/* Κεντρική ευθυγράμμιση wrapper */
 .container {
   height: 100vh;
   display: flex;
@@ -21,48 +23,52 @@ body, html, #root {
   padding: 20px;
 }
 
-/* Κάρτα */
+/* Κάρτα σύνδεσης */
 .card {
-  background: rgba(255 255 255 / 0.08);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 20px;
   padding: 40px;
   max-width: 400px;
   width: 100%;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   text-align: center;
   backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* Logo */
 .logo {
-  width: 90px; /* Μεγαλύτερο */
+  width: 90px;
   height: 90px;
-  margin: 0 auto 30px auto; /* Κάπως πιο κάτω */
-  animation: spin 15s linear infinite; /* πιο αργό rotation */
+  margin-bottom: 30px;
+  animation: spin 15s linear infinite;
 }
 
-/* Κύρια τίτλος */
+/* Κύριος τίτλος */
 .title {
   font-size: 3rem;
   font-weight: 900;
   margin-bottom: 8px;
 }
 
-/* Subtitle */
+/* Υπότιτλος */
 .subtitle {
   font-size: 1.2rem;
   margin-bottom: 32px;
-  color: rgba(255,255,255,0.8);
+  color: rgba(255, 255, 255, 0.8);
 }
 
-/* Form */
+/* Φόρμα */
 .form {
-  text-align: left;
+  width: 100%;
+  text-align: center;
 }
 
-/* Form group */
 .form-group {
   margin-bottom: 20px;
+  width: 100%;
 }
 
 /* Label */
@@ -71,11 +77,13 @@ body, html, #root {
   margin-bottom: 8px;
   font-size: 1.1rem;
   font-weight: 600;
+  text-align: left;
 }
 
-/* Input wrapper για εικονίδιο */
+/* Wrapper για input και εικονίδιο */
 .input-wrapper {
   position: relative;
+  width: 100%;
 }
 
 /* Input */
@@ -84,32 +92,54 @@ body, html, #root {
   padding: 12px 15px 12px 40px;
   border-radius: 12px;
   border: none;
-  background: rgba(255 255 255 / 0.2);
+  background: rgba(255, 255, 255, 0.2);
   color: white;
   font-size: 1rem;
   transition: background 0.3s ease;
 }
 
 .input::placeholder {
-  color: rgba(255 255 255 / 0.6);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .input:focus {
   outline: none;
-  background: rgba(255 255 255 / 0.3);
+  background: rgba(255, 255, 255, 0.3);
   box-shadow: 0 0 8px rgba(255, 0, 128, 0.7);
 }
 
-/* Error */
-.error {
-  color: #ff6b6b;
-  font-weight: 700;
-  margin-top: -10px;
-  margin-bottom: 10px;
-  font-size: 0.9rem;
-  text-align: center;
+/* Εικονίδιο αριστερά */
+.icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.7);
+  pointer-events: none;
 }
 
+/* Εναλλαγή προβολής password */
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease;
+}
+
+.password-toggle:hover {
+  color: white;
+}
+
+/* Κουμπί υποβολής */
 .btn-submit {
   width: 100%;
   background: linear-gradient(90deg, #4a6072, #6c7a89);
@@ -128,60 +158,36 @@ body, html, #root {
   filter: brightness(1.1);
 }
 
-/* Footer */
+/* Μήνυμα λάθους */
+.error {
+  color: #ff6b6b;
+  font-weight: 700;
+  margin-top: -10px;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Κάτω μέρος login */
 .footer-text {
   margin-top: 30px;
   font-size: 0.9rem;
-  text-align: center;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .register-link {
-  color: #a0b0c0; /* ουδέτερο γκρι-μπλε */
+  color: #a0b0c0;
   text-decoration: underline;
   cursor: pointer;
   transition: color 0.3s ease;
 }
 
 .register-link:hover {
-  color: #c0d0e0; /* πιο ανοιχτό μπλε */
+  color: #c0d0e0;
 }
 
-.input-wrapper {
-  position: relative;
-}
-
-.icon {
-  position: absolute;
-  left: 12px; /* Αριστερά */
-  top: 50%;
-  transform: translateY(-50%);
-  color: rgba(255 255 255 / 0.7);
-  pointer-events: none; /* Να μην μπλοκάρει clicks */
-}
-
-.password-toggle {
-  position: absolute;
-  right: 12px; /* Δεξιά */
-  top: 50%;
-  transform: translateY(-50%);
-  background: transparent;
-  border: none;
-  color: rgba(255 255 255 / 0.7);
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.3s ease;
-}
-
-.password-toggle:hover {
-  color: white;
-}
-
-/* Animation spin για το logo */
+/* Animation logo */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
-} 
+}

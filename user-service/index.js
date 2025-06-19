@@ -18,23 +18,20 @@ app.post('/users/upload', upload.single('file'), async (req, res) => {
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = xlsx.utils.sheet_to_json(sheet, { range: 2 });
 
-    for (const row of data) {
-      const password = String(row["Αριθμός Μητρώου"]);
-      const hash = await bcrypt.hash(password, 10);
+   for (const row of data) {
+  // rawId μπορεί να είναι 3184623 ή "03184623"
+  const rawId = row["Αριθμός Μητρώου"];
+  const studentId = String(rawId).padStart(8, '0');  
+  const hash = await bcrypt.hash(studentId, 10);
 
-      await pool.query(
-        `INSERT INTO users (student_id, full_name, email, password_hash, role)
-         VALUES ($1, $2, $3, $4, $5)
-         ON CONFLICT (email) DO NOTHING`,
-        [
-          row["Αριθμός Μητρώου"],
-          row["Ονοματεπώνυμο"],
-          row["Ακαδημαϊκό E-mail"],
-          hash,
-          row["Ρόλος"] || 'student'
-        ]
-      );
-    }
+  await pool.query(
+    `INSERT INTO users (student_id, full_name, email, password_hash, role)
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT (email) DO NOTHING`,
+    [ studentId, row["Ονοματεπώνυμο"], row["Ακαδημαϊκό E-mail"], hash, row["Ρόλος"] || 'student' ]
+  );
+}
+
 
     res.send('Users uploaded successfully!');
   } catch (err) {
@@ -110,6 +107,7 @@ app.post('/login', async (req, res) => {
     res.json({
       message: 'Login successful',
       user_id: user.user_id,
+      student_id: user.student_id,
       role: user.role,
       full_name: user.full_name,
       email: user.email

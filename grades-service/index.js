@@ -23,7 +23,7 @@ function getUserFromHeaders(req) {
 
 
 app.post('/grades/upload', upload.single('file'), async (req, res) => {
-    const user = getUserFromHeaders(req);
+  const user = getUserFromHeaders(req);
 
   if (user.role !== 'teacher') {
     return res.status(403).send('Forbidden: Only teachers can upload grades');
@@ -33,42 +33,43 @@ app.post('/grades/upload', upload.single('file'), async (req, res) => {
     'SELECT * FROM users WHERE email = $1 AND role = $2',
     [user.email, 'teacher']
   );
-
   if (check.rows.length === 0) {
     return res.status(403).send('Forbidden: Invalid teacher credentials');
   }
-    
-    
-    try {
-        const workbook = xlsx.readFile(req.file.path);
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const data = xlsx.utils.sheet_to_json(sheet, { range: 2 });
+
+  try {
+    const workbook = xlsx.readFile(req.file.path);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const data = xlsx.utils.sheet_to_json(sheet, { range: 2 });
+
+    for (const row of data) {
+  const rawId = row["Αριθμός Μητρώου"];
+  const studentId = String(rawId).padStart(8, '0');
+
+  await pool.query(
+    `INSERT INTO grades (
+       student_id, full_name, email, semester, class_name, grading_scale, grade
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+    [
+      studentId,
+      row["Ονοματεπώνυμο"],
+      row["Ακαδημαϊκό E-mail"],
+      row["Περίοδος δήλωσης"],
+      row["Τμήμα Τάξης"],
+      row["Κλίμακα βαθμολόγησης"],
+      row["Βαθμολογία"]
+    ]
+  );
+}
 
 
-        for (const row of data) {
-            await pool.query(
-                `INSERT INTO grades (
-          student_id, full_name, email, semester, class_name, grading_scale, grade
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-                [
-                    row["Αριθμός Μητρώου"],
-                    row["Ονοματεπώνυμο"],
-                    row["Ακαδημαϊκό E-mail"],
-                    row["Περίοδος δήλωσης"],
-                    row["Τμήμα Τάξης"],
-                    row["Κλίμακα βαθμολόγησης"],
-                    row["Βαθμολογία"]
-                ]
-            );
-        }
-
-
-        res.send('Grades uploaded successfully!');
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Upload failed');
-    }
+    res.send('Grades uploaded successfully!');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Upload failed');
+  }
 });
+
 
 
 app.get('/grades/class/:name', async (req, res) => {

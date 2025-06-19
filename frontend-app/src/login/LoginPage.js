@@ -16,9 +16,12 @@ export default function LoginPage() {
     setError("");
     try {
       const res = await axios.post("http://localhost:8080/users/login", { email, password });
+      console.log("LOGIN RESPONSE:", res.data);
       localStorage.setItem("email", res.data.email);
       localStorage.setItem("role", res.data.role);
       localStorage.setItem("full_name", res.data.full_name);
+      localStorage.setItem("student_id", res.data.student_id); // 👈 πρόσθεσε αυτό
+
 
       if (res.data.role === "teacher") {
         navigate("/teacher");
@@ -87,10 +90,7 @@ export default function LoginPage() {
           <button type="submit" className="btn-submit">Sign In</button>
         </form>
 
-        <p className="footer-text">
-          Don't have an account?{" "}
-          <a href="/register" className="register-link">Register</a>
-        </p>
+      
       </div>
     </div>
   );
