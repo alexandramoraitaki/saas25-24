@@ -24,6 +24,7 @@ export default function LoginPage() {
       localStorage.setItem("role", res.data.role);
       localStorage.setItem("full_name", res.data.full_name);
       localStorage.setItem("student_id", res.data.student_id);
+      localStorage.setItem("customHistory", JSON.stringify([])); //
 
       // 👉 Προσθήκη flag για αποτροπή επιστροφής στο login
       sessionStorage.setItem("fromLogin", "true");

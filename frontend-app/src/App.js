@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
+import PageTracker from './components/PageTracker';
 import LoginPage from './login/LoginPage';
 import StudentDashboard from './student/dashboard/StudentDashboard';
 import TeacherDashboard from './teacher/dashboard/TeacherDashboard';
@@ -13,39 +14,20 @@ import RespondReview from './teacher/respond-review/RespondReview';
 import UploadFinal from './teacher/upload-final/UploadFinal';
 import ClassStats from './teacher/class-stats/ClassStats';
 import ClassStatsStudent from './student/class-stats-student/ClassStatsStudent';
+import Courses from './student/courses/Courses';
 import './App.css';
-import { useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
-
-function PageTracker() {
-  const location = useLocation();
-
-  useEffect(() => {
-    const currentPath = location.pathname;
-    const excluded = ['/login', '/'];
-
-    if (!excluded.includes(currentPath)) {
-      const history = JSON.parse(localStorage.getItem('customHistory')) || [];
-      if (history[history.length - 1] !== currentPath) {
-        localStorage.setItem('customHistory', JSON.stringify([...history, currentPath]));
-      }
-    }
-  }, [location.pathname]);
-
-  return null;
-}
-
-
 
 function App() {
   return (
     <Router>
+      <PageTracker /> {/* Παρακολουθεί τις σελίδες για αποφυγή login */}
       <div className="App">
         <Navbar />
         <Routes>
+          {/* Public */}
           <Route path="/login" element={<LoginPage />} />
 
-          {/* Student Routes */}
+          {/* Student */}
           <Route
             path="/student"
             element={
@@ -70,8 +52,25 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/student/courses"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <Courses />
+              </ProtectedRoute>
+            }
+          />
 
-          {/* Teacher Routes */}
+          <Route
+            path="/student/class-stats-student"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <ClassStatsStudent />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Teacher */}
           <Route
             path="/teacher"
             element={
@@ -113,7 +112,7 @@ function App() {
             }
           />
           <Route
-            path="/teacher/class-stats/:className"
+            path="/teacher/class-stats"
             element={
               <ProtectedRoute allowedRoles={['teacher']}>
                 <ClassStats />
@@ -121,7 +120,7 @@ function App() {
             }
           />
 
-          {/* Default Route */}
+          {/* Default redirect */}
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>
@@ -130,5 +129,3 @@ function App() {
 }
 
 export default App;
-
-

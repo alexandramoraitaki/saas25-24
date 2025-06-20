@@ -4,16 +4,14 @@
   "description": "Generates statistics and analytics related to courses and grade distributions.",
   "main": "index.js",
   "scripts": {
-    
-      "start": "node index.js",
-     "dev":   "nodemon index.js"
-
-
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "multer": "^2.0.0",

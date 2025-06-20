@@ -1,10 +1,10 @@
 const express = require('express');
 const app = express();
-app.use(express.json());  
+app.use(express.json());
 const multer = require('multer');
 const xlsx = require('xlsx');
 const { Pool } = require('pg');
-  
+
 require('dotenv').config();
 
 const upload = multer({ dest: 'uploads/' });
@@ -43,24 +43,26 @@ app.post('/grades/upload', upload.single('file'), async (req, res) => {
     const data = xlsx.utils.sheet_to_json(sheet, { range: 2 });
 
     for (const row of data) {
-  const rawId = row["Αριθμός Μητρώου"];
-  const studentId = String(rawId).padStart(8, '0');
+      const rawId = row["Αριθμός Μητρώου"];
+      const studentId = String(rawId).padStart(8, '0');
 
-  await pool.query(
-    `INSERT INTO grades (
-       student_id, full_name, email, semester, class_name, grading_scale, grade
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-    [
-      studentId,
-      row["Ονοματεπώνυμο"],
-      row["Ακαδημαϊκό E-mail"],
-      row["Περίοδος δήλωσης"],
-      row["Τμήμα Τάξης"],
-      row["Κλίμακα βαθμολόγησης"],
-      row["Βαθμολογία"]
-    ]
-  );
-}
+      await pool.query(
+        `INSERT INTO grades (
+     student_id, full_name, email, semester, class_name,
+     grading_scale, grade, uploaded_by
+   ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+        [
+          studentId,
+          row["Ονοματεπώνυμο"],
+          row["Ακαδημαϊκό E-mail"],
+          row["Περίοδος δήλωσης"],
+          row["Τμήμα Τάξης"],
+          row["Κλίμακα βαθμολόγησης"],
+          row["Βαθμολογία"],
+          user.email  // εδώ μπαίνει ο καθηγητής
+        ]
+      );
+    }
 
 
     res.send('Grades uploaded successfully!');
@@ -70,30 +72,44 @@ app.post('/grades/upload', upload.single('file'), async (req, res) => {
   }
 });
 
+app.get('/grades/teacher/:email', async (req, res) => {
+  const { email } = req.params;
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM grades WHERE uploaded_by = $1',
+      [email]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error fetching teacher grades');
+  }
+});
 
 
 app.get('/grades/class/:name', async (req, res) => {
-    const { name } = req.params;
+  const { name } = req.params;
 
 
-    try {
-        const result = await pool.query(
-            'SELECT * FROM grades WHERE class_name = $1',
-            [name]
-        );
-        res.json(result.rows);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Error fetching grades for class');
-    }
+  try {
+    const result = await pool.query(
+      'SELECT * FROM grades WHERE class_name = $1',
+      [name]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error fetching grades for class');
+  }
 });
 
 
 
 
 app.get('/grades/student/:id', async (req, res) => {
-    const user = getUserFromHeaders(req);
-    const { id } = req.params;
+  const user = getUserFromHeaders(req);
+  const { id } = req.params;
 
   if (user.role !== 'student') {
     return res.status(403).send('Forbidden: Only students can access this');
@@ -114,24 +130,24 @@ app.get('/grades/student/:id', async (req, res) => {
 
 
 app.get('/grades/semester/:id', async (req, res) => {
-    const { id } = req.params;
+  const { id } = req.params;
 
 
-    try {
-        const result = await pool.query(
-            'SELECT * FROM grades WHERE semester = $1',
-            [id]
-        );
-        res.json(result.rows);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Error fetching semester grades');
-    }
+  try {
+    const result = await pool.query(
+      'SELECT * FROM grades WHERE semester = $1',
+      [id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error fetching semester grades');
+  }
 });
 
 
 app.listen(5003, () => {
-    console.log('Grades service running on port 5003');
+  console.log('Grades service running on port 5003');
 });
 
 app.patch('/grades/finalize/class/:name/semester/:sem', async (req, res) => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaArrowLeft, FaUserCircle } from 'react-icons/fa';
+import { FaArrowLeft } from 'react-icons/fa';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -9,23 +9,27 @@ const Navbar = () => {
   const role = localStorage.getItem('role');
 
   const handleBack = () => {
-    const history = window.history;
+    let history = JSON.parse(localStorage.getItem("customHistory")) || [];
 
-    // Αν υπάρχει μόνο μία σελίδα στο ιστορικό, πήγαινε dashboard
-    if (history.length <= 2) {
-      navigate(role === 'teacher' ? '/teacher' : '/student', { replace: true });
-      return;
+    // Αφαίρεσε την τρέχουσα σελίδα
+    history.pop();
+
+    //  Αφαίρεσε το login αν είναι το τελευταίο
+    while (history.length && history[history.length - 1] === "/login") {
+      history.pop();
     }
 
-    // Αν βρίσκομαι ήδη στο login (και πατήθηκε back), πήγαινε dashboard
-    if (location.pathname === '/login') {
-      navigate(role === 'teacher' ? '/teacher' : '/student', { replace: true });
-      return;
-    }
+    const previous = history.pop();
+    localStorage.setItem("customHistory", JSON.stringify(history));
 
-    // Κανονικό back
-    navigate(-1);
+    if (previous) {
+      navigate(previous);
+    } else {
+      navigate(role === "teacher" ? "/teacher" : "/student");
+    }
   };
+
+
 
   return (
     <nav className="navbar">
@@ -41,9 +45,22 @@ const Navbar = () => {
         clearSKY
       </div>
 
-      <div className="nav-profile" title="Your profile">
-        <FaUserCircle size={24} />
+      <div
+        className="nav-logo-right"
+        onClick={() => navigate(role === 'teacher' ? '/teacher' : '/student')}
+        title="Go to dashboard"
+      >
+        <img
+          src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/2601.png"
+          alt="cloud"
+          style={{
+            height: '28px',
+            cursor: 'pointer',
+            filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.6))'
+          }}
+        />
       </div>
+
     </nav>
   );
 };

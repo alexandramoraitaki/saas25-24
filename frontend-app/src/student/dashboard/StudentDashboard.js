@@ -6,6 +6,7 @@ import {
   FaPaperPlane,
   FaSearch,
   FaBook,
+  FaChartBar
 } from 'react-icons/fa';
 
 const StudentDashboard = () => {
@@ -37,14 +38,14 @@ const StudentDashboard = () => {
       icon: <FaPaperPlane />,
     },
     {
-      label: 'View Review Status',
-      path: '/student/review-status',
-      icon: <FaSearch />,
-    },
-    {
       label: 'View My Courses',
       path: '/student/courses',
       icon: <FaBook />,
+    },
+    {
+      label: 'Class Statistics',
+      path: '/student/class-stats-student',
+      icon: <FaChartBar />,
     },
   ];
 
