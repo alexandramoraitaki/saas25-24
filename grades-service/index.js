@@ -4,6 +4,7 @@ app.use(express.json());
 const multer = require('multer');
 const xlsx = require('xlsx');
 const { Pool } = require('pg');
+const cors    = require('cors');
 
 require('dotenv').config();
 
@@ -12,6 +13,7 @@ const upload = multer({ dest: 'uploads/' });
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
+app.use(cors());
 
 function getUserFromHeaders(req) {
   return {
