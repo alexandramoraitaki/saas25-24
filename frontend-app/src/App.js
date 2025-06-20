@@ -7,13 +7,35 @@ import StudentDashboard from './student/dashboard/StudentDashboard';
 import TeacherDashboard from './teacher/dashboard/TeacherDashboard';
 import Grades from './student/grades/Grades';
 import ReviewRequest from './student/review-request/ReviewRequest';
-import ReviewStatus from './student/review-status/ReviewStatus';
 import UploadInitial from './teacher/upload-initial/UploadInitial';
 import ReviewRequests from './teacher/review-requests/ReviewRequests';
 import RespondReview from './teacher/respond-review/RespondReview';
 import UploadFinal from './teacher/upload-final/UploadFinal';
 import ClassStats from './teacher/class-stats/ClassStats';
+import ClassStatsStudent from './student/class-stats-student/ClassStatsStudent';
 import './App.css';
+import { useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+
+function PageTracker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const excluded = ['/login', '/'];
+
+    if (!excluded.includes(currentPath)) {
+      const history = JSON.parse(localStorage.getItem('customHistory')) || [];
+      if (history[history.length - 1] !== currentPath) {
+        localStorage.setItem('customHistory', JSON.stringify([...history, currentPath]));
+      }
+    }
+  }, [location.pathname]);
+
+  return null;
+}
+
+
 
 function App() {
   return (
@@ -45,14 +67,6 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['student']}>
                 <ReviewRequest />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/student/review-status"
-            element={
-              <ProtectedRoute allowedRoles={['student']}>
-                <ReviewStatus />
               </ProtectedRoute>
             }
           />

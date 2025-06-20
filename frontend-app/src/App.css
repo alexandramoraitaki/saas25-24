@@ -1,4 +1,46 @@
-/* === RESET === */
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --------------------------------------------------------------
+  1. RESET & GLOBAL VARIABLES
+-------------------------------------------------------------- */
 *,
 *::before,
 *::after {
@@ -7,56 +49,38 @@
   padding: 0;
 }
 
-/* === ROOT VARIABLES === */
 :root {
-  --color-bg: #f0f4f8;
+  --color-bg: #f318ff;
   --color-surface: #ffffff;
-  --color-primary: #3f51b5;
+  --color-primary: #1a4a6ca0;
   --color-primary-hover: #303f9f;
   --color-secondary: #e8eaf6;
   --color-secondary-hover: #d1d9ff;
   --color-text: #1a1a1a;
   --color-text-light: #5f6368;
   --color-border: #d6dbe2;
-  --radius: 12px;
+  --radius: 10px;
   --spacing: 1rem;
   --font-base: 16px;
   --font-family: 'Segoe UI', 'Roboto', sans-serif;
 }
 
-/* === BASE BODY === */
+/* --------------------------------------------------------------
+  2. BASE STYLES
+-------------------------------------------------------------- */
 body {
-  background: var(--color-bg);
+  background: linear-gradient(135deg, #f0f2f5, #d9e4f5);
   color: var(--color-text);
   font-family: var(--font-family);
   font-size: var(--font-base);
   line-height: 1.5;
-  text-align: center; /* Κεντρική στοίχιση παντού */
 }
 
-/* === CONTAINER === */
-.page-container {
-  max-width: 960px;
-  margin: 4rem auto;
-  padding: 0 var(--spacing);
-  background: var(--color-surface);
-  border-radius: var(--radius);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-}
 
-/* === CARD === */
-.card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 2rem;
-  margin: 2rem auto;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-/* === TYPOGRAPHY === */
-h1, h2, h3 {
-  color: var(--color-primary);
+h1,
+h2,
+h3 {
+  color: var(--color-text);
   margin-bottom: var(--spacing);
 }
 
@@ -66,33 +90,71 @@ p {
   margin-bottom: var(--spacing);
 }
 
-.greeting {
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: var(--color-text);
-  margin-bottom: var(--spacing);
+/* --------------------------------------------------------------
+  3. LAYOUT & UTILITIES
+-------------------------------------------------------------- */
+.center-screen {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 90vh;
 }
 
-/* === BUTTONS === */
+.page-container {
+  position: relative;
+  max-width: 900px;
+  margin: calc(var(--spacing) * 2) auto;
+  padding: 0 var(--spacing);
+}
+
+.form-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.btn-group {
+  display: flex;
+  gap: var(--spacing);
+  justify-content: center;
+}
+
+/* --------------------------------------------------------------
+  4. COMPONENTS
+-------------------------------------------------------------- */
+.card {
+  background: linear-gradient(135deg, #c3f5fa, #ebf6f8);
+  border: 3px solid rgba(245, 239, 239, 0.7);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(255, 253, 253, 0.25);
+  padding: 3.5rem 5rem;
+  max-width: 1100px;
+  margin: 2rem auto;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+
 .btn {
   display: inline-block;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
+  padding: 1.25rem 1.5rem;
+  font-size: 1.1rem;
   font-weight: 600;
   border-radius: var(--radius);
   border: none;
   cursor: pointer;
-  transition: background 0.2s, transform 0.2s ease;
+  transition: background 0.2s;
 }
 
 .btn-primary {
   background: var(--color-primary);
-  color: white;
+  color: var(--color-surface);
 }
 
 .btn-primary:hover {
   background: var(--color-primary-hover);
-  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgb(66, 148, 255);
 }
 
 .btn-secondary {
@@ -104,7 +166,6 @@ p {
   background: var(--color-secondary-hover);
 }
 
-/* === FORM ELEMENTS === */
 .input,
 .select,
 .textarea {
@@ -118,15 +179,6 @@ p {
   margin-bottom: var(--spacing);
 }
 
-.input:focus,
-.select:focus,
-.textarea:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.1);
-}
-
-/* === FILE INPUT === */
 .input-file {
   padding: var(--spacing);
   border: 2px dashed var(--color-border);
@@ -135,51 +187,16 @@ p {
   cursor: pointer;
 }
 
-/* === TABLE === */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: var(--spacing);
-}
-
-th,
-td {
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--color-border);
-}
-
-th {
-  background: var(--color-secondary);
-  color: var(--color-primary);
-  text-align: left;
-}
-
-/* === GRID === */
-.form-grid {
-  display: grid;
-  gap: var(--spacing);
-}
-
-.btn-group {
-  display: flex;
-  gap: var(--spacing);
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-/* === ERROR / STATUS === */
-.error {
-  color: #d32f2f;
-  margin-top: var(--spacing);
+/* --------------------------------------------------------------
+  5. DASHBOARD ELEMENTS
+-------------------------------------------------------------- */
+.greeting {
+  font-size: 1.8rem;
   font-weight: bold;
+  color: var(--color-text);
+  margin-bottom: var(--spacing);
 }
 
-.status {
-  color: #388e3c;
-  margin-top: var(--spacing);
-}
-
-/* === DASHBOARD GRID === */
 .actions-grid {
   display: grid;
   gap: var(--spacing);
@@ -189,32 +206,119 @@ th {
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 }
 
-/* === ACTION CARDS === */
 .action-card {
   text-decoration: none;
   color: inherit;
   transition: transform 0.2s ease;
-  display: block;
 }
 
 .action-card:hover {
   transform: translateY(-4px);
 }
 
-/* === CARD CONTENT === */
 .card-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* === CENTERING WRAPPERS === */
-.center-screen {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 90vh;
+/* --------------------------------------------------------------
+  6. PROFILE STYLING
+-------------------------------------------------------------- */
+.user-summary,
+.profile-inline,
+.floating-profile {
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+}
 
+.user-summary {
+  background: var(--color-secondary);
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(245, 239, 239, 0.05);
+}
+
+.user-summary p {
+  margin: 0.25rem 0;
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+.profile-title {
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  color: var(--color-primary);
+}
+
+.profile-inline {
+  background: #96eefb;
+  padding: 1rem;
   text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  font-size: 0.95rem;
+  transition: background 0.3s ease;
+}
 
+.profile-inline:hover {
+  background: #e8f0fe;
+}
+
+.profile-inline-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--color-primary);
+}
+
+.floating-profile {
+  position: fixed;
+  top: 5rem;
+  right: 2rem;
+  background: linear-gradient(135deg, #bdf8fe, #cbe5e9);
+  box-shadow: 0 4px 6px rgba(247, 246, 246);
+  padding: 1rem;
+  width: 280px;
+  font-size: 0.95rem;
+  z-index: 999;
+  text-align: left;
+  animation: fadeIn 0.4s ease;
+  transition: transform 0.3s ease, box-shadow 0.4s ease;
+}
+
+.floating-profile:hover {
+  transform: translateY(-5px) scale(1.03);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+}
+
+.profile-floating-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #6a1b9a;
+  margin-bottom: 0.75rem;
+}
+
+.floating-profile p {
+  margin: 0.3rem 0;
+  color: #37474f;
+}
+
+/* --------------------------------------------------------------
+  7. RESPONSIVE & ANIMATIONS
+-------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .floating-profile {
+    display: none;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

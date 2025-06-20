@@ -15,18 +15,23 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     try {
-      const res = await axios.post("http://localhost:8080/users/login", { email, password });
-      console.log("LOGIN RESPONSE:", res.data);
+      const res = await axios.post("http://localhost:8080/users/login", {
+        email,
+        password,
+      });
+
       localStorage.setItem("email", res.data.email);
       localStorage.setItem("role", res.data.role);
       localStorage.setItem("full_name", res.data.full_name);
-      localStorage.setItem("student_id", res.data.student_id); // 👈 πρόσθεσε αυτό
+      localStorage.setItem("student_id", res.data.student_id);
 
+      // 👉 Προσθήκη flag για αποτροπή επιστροφής στο login
+      sessionStorage.setItem("fromLogin", "true");
 
       if (res.data.role === "teacher") {
-        navigate("/teacher");
+        navigate("/teacher", { replace: true });
       } else {
-        navigate("/student");
+        navigate("/student", { replace: true });
       }
     } catch {
       setError("Invalid email or password.");
@@ -48,39 +53,39 @@ export default function LoginPage() {
           <div className="form-group">
             <label htmlFor="email" className="label">E-mail</label>
             <div className="input-wrapper">
-              <Mail className="icon" size={22} />
+              <Mail className="icon" size={20} />
               <input
                 id="email"
                 type="email"
+                className="input"
+                placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
                 required
-                className="input"
               />
             </div>
           </div>
 
           <div className="form-group">
             <label htmlFor="password" className="label">Password</label>
-            <div className="input-wrapper">
-              <Lock className="icon" size={22} />
+            <div className="input-wrapper password-wrapper">
+              <Lock className="icon" size={20} />
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
+                className="input"
+                placeholder="********"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="********"
                 required
-                className="input"
               />
               <button
                 type="button"
                 className="password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label="Toggle password visibility"
               >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
@@ -89,9 +94,7 @@ export default function LoginPage() {
 
           <button type="submit" className="btn-submit">Sign In</button>
         </form>
-
-      
       </div>
     </div>
   );
-} 
+}
