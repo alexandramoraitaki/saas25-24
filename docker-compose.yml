@@ -1,4 +1,7 @@
+
+
 services:
+  
   postgres:
     image: postgres:15
     container_name: postgres
@@ -10,56 +13,101 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"    # AMQP port
+      - "15672:15672"  # Management UI
+    healthcheck:
+      # τρέχει rabbitmq-diagnostics status και αναμένει επιτυχία
+      test: ["CMD", "rabbitmq-diagnostics", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   grades-service:
-    build: ./grades-service
+    build:
+      context: .
+      dockerfile: ./grades-service/Dockerfile
     container_name: grades-service
-    ports:
-      - "5003:5003"
-    depends_on:
-      - postgres
     env_file:
       - ./grades-service/.env
-
+    depends_on:
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "5003:5003"
 
   stats-service:
-    build: ./stats-service
+    build:
+      context: .
+      dockerfile: ./stats-service/Dockerfile
     container_name: stats-service
-    ports:
-      - "5004:5004"
-    depends_on:
-      - postgres
     env_file:
       - ./stats-service/.env
+    depends_on:
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "5004:5004"
 
   user-service:
-    build: ./user-service
+    build:
+      context: .
+      dockerfile: ./user-service/Dockerfile
     container_name: user-service
-    ports:
-      - "5005:5005"
-    depends_on:
-      - postgres
     env_file:
       - ./user-service/.env
+    depends_on:
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "5005:5005"
 
   review-service:
-    build: ./review-service
-    ports:
-      - "5006:5006"
-    depends_on:
-      - postgres
+    build:
+      context: .
+      dockerfile: ./review-service/Dockerfile
+    container_name: review-service
     env_file:
       - ./review-service/.env
+    depends_on:
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "5006:5006"
 
   api-gateway:
-    build: ./api-gateway
+    build:
+      context: .
+      dockerfile: ./api-gateway/Dockerfile
+    container_name: api-gateway
+    depends_on:
+      user-service:
+        condition: service_started
+      grades-service:
+        condition: service_started
+      stats-service:
+        condition: service_started
+      review-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     ports:
       - "8080:8080"
-    depends_on:
-      - user-service
-      - grades-service
-      - stats-service
-      - review-service
 
 volumes:
   pgdata:

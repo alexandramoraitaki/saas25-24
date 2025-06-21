@@ -1,13 +1,16 @@
-const express = require('express');
-const cors    = require('cors'); 
-const { Pool } = require('pg');
+// review-service/index.js
+
 require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const { Pool } = require('pg');
+const { getChannel } = require('@clearsky/common');
 
 const app = express();
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-
-app.use(cors());  
+app.use(cors());
 app.use(express.json());
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 function getUserFromHeaders(req) {
   return {
@@ -16,155 +19,152 @@ function getUserFromHeaders(req) {
   };
 }
 
-// POST /reviews - Φοιτητής στέλνει αίτημα
+// --- Consumer startup with retry logic ---
+async function startConsumer(retries = 5, delayMs = 3000) {
+  try {
+    const chan = await getChannel();
+    const queue = 'review.requests';
+
+    // make sure exchange & queue exist and bind them
+    await chan.assertQueue(queue, { durable: true });
+    await chan.bindQueue(queue, 'clearSKY.events', 'grades.uploaded');
+
+    chan.consume(queue, async msg => {
+      try {
+        const { studentId, className, semester } = JSON.parse(msg.content.toString());
+
+        await pool.query(
+          `INSERT INTO review_requests (grade_id, student_id, class_name, semester, status)
+           VALUES (
+             (SELECT grades_id FROM grades WHERE student_id=$1 AND class_name=$2 AND semester=$3),
+             $1, $2, $3, 'pending'
+           )`,
+          [studentId, className, semester]
+        );
+
+        console.log(`➕ Auto-created review request for ${studentId} / ${className}`);
+        chan.ack(msg);
+      } catch (err) {
+        console.error('❌ Error handling grades.uploaded event:', err);
+        chan.nack(msg, false, true);
+      }
+    });
+
+    console.log('📥 Review-service consumer listening on grades.uploaded');
+  } catch (err) {
+    if (retries > 0) {
+      console.warn(`RabbitMQ not ready, retrying in ${delayMs}ms… (${retries} retries left)`);
+      setTimeout(() => startConsumer(retries - 1, delayMs), delayMs);
+    } else {
+      console.error('❌ Could not establish RabbitMQ consumer:', err);
+      process.exit(1);
+    }
+  }
+}
+startConsumer();
+
+// --- HTTP endpoints remain unchanged ---
+
+// POST /reviews – student submits a manual request
 app.post('/reviews', async (req, res) => {
   const user = getUserFromHeaders(req);
-  if (user.role !== 'student') {
-    return res.status(403).send('Forbidden: Only students can submit review requests');
-  }
-
+  if (user.role !== 'student') return res.status(403).send('Forbidden: Only students');
   const { grade_id, reason } = req.body;
-
   try {
-    // Βρες τον student_id από το email του χρήστη
-    const userRes = await pool.query(
-      `SELECT user_id FROM users WHERE email = $1`,
+    const { rowCount, rows } = await pool.query(
+      'SELECT user_id FROM users WHERE email=$1',
       [user.email]
     );
+    if (rowCount === 0) return res.status(404).send('Student not found');
+    const student_id = rows[0].user_id;
 
-    if (userRes.rowCount === 0) {
-      return res.status(404).send('Student not found');
-    }
-
-    const student_id = userRes.rows[0].user_id;
-
-    console.log('🟢 Νέο αίτημα:', {
-  email: user.email,
-  grade_id,
-  reason
-});
-    
     await pool.query(
-      `INSERT INTO review_requests (grade_id, student_id, reason)
-       VALUES ($1, $2, $3)`,
+      `INSERT INTO review_requests (grade_id, student_id, reason, status)
+       VALUES ($1, $2, $3, 'pending')`,
       [grade_id, student_id, reason]
     );
     res.send('Review request submitted');
   } catch (err) {
-    console.error(err);
+    console.error('[POST /reviews] Error:', err);
     res.status(500).send('Failed to submit review request');
   }
 });
 
-// GET /reviews/class/:name - Καθηγητής βλέπει αιτήματα
+// GET /reviews/class/:name – teacher views pending requests for a class
 app.get('/reviews/class/:name', async (req, res) => {
   const user = getUserFromHeaders(req);
-  if (user.role !== 'teacher') {
-    return res.status(403).send('Forbidden: Only teachers can view review requests');
-  }
-
-  const { name } = req.params;
-
+  if (user.role !== 'teacher') return res.status(403).send('Forbidden: Only teachers');
   try {
-    const result = await pool.query(
-      `SELECT r.*, g.class_name, g.semester, g.grade
+    const { rows } = await pool.query(
+      `SELECT r.review_id, r.reason, r.status, r.response,
+              g.class_name, g.semester, g.grade
        FROM review_requests r
        JOIN grades g ON r.grade_id = g.grades_id
        WHERE g.class_name = $1 AND r.status = 'pending'`,
-      [name]
+      [req.params.name]
     );
-    res.json(result.rows);
+    res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('[GET /reviews/class/:name] Error:', err);
     res.status(500).send('Failed to fetch review requests');
   }
 });
 
-// PATCH /reviews/:id - Καθηγητής απαντά
+// PATCH /reviews/:id – teacher responds to a request
 app.patch('/reviews/:id', async (req, res) => {
   const user = getUserFromHeaders(req);
-  if (user.role !== 'teacher') {
-    return res.status(403).send('Forbidden: Only teachers can respond to reviews');
-  }
-
-
-  const { id } = req.params;
+  if (user.role !== 'teacher') return res.status(403).send('Forbidden: Only teachers');
   const { status, response, new_grade } = req.body;
-
-
   try {
-    // 1. Ενημέρωσε το review και πάρε το grade_id που σχετίζεται
-    const reviewUpdate = await pool.query(
+    const { rowCount, rows } = await pool.query(
       `UPDATE review_requests
-       SET status = $1, response = $2, responded_at = CURRENT_TIMESTAMP
+         SET status = $1, response = $2, responded_at = CURRENT_TIMESTAMP
        WHERE review_id = $3
        RETURNING grade_id`,
-      [status, response, id]
+      [status, response, req.params.id]
     );
-
-
-    if (reviewUpdate.rowCount === 0) {
-      return res.status(404).send('Review request not found');
-    }
-
-
-    const gradeId = reviewUpdate.rows[0].grade_id;
-
-
-    // 2. Αν accepted και υπάρχει new_grade → ενημέρωσε και τον βαθμό
-    if (status === 'accepted' && new_grade !== undefined) {
+    if (rowCount === 0) return res.status(404).send('Review not found');
+    const gradeId = rows[0].grade_id;
+    if (status === 'accepted' && new_grade != null) {
       await pool.query(
-        `UPDATE grades SET grade = $1 WHERE grades_id = $2`,
+        'UPDATE grades SET grade = $1 WHERE grades_id = $2',
         [new_grade, gradeId]
       );
     }
-
-
-    res.send('Review request updated');
+    res.send('Review updated');
   } catch (err) {
-    console.error(err);
+    console.error('[PATCH /reviews/:id] Error:', err);
     res.status(500).send('Failed to update review');
   }
 });
 
-// 👉 ΠΡΟΣΘΕΣΕ αυτό πριν το app.listen
-
-// GET  /reviews/student   – όλα τα αιτήματα του τρέχοντος φοιτητή
+// GET /reviews/student – student views their own requests
 app.get('/reviews/student', async (req, res) => {
   const user = getUserFromHeaders(req);
-  if (user.role !== 'student') return res.sendStatus(403);
-
+  if (user.role !== 'student') return res.status(403).send('Forbidden: Only students');
   try {
-    /* 1. βρίσκουμε το user_id (INTEGER) */
-    const { rows } = await pool.query(
-      'SELECT user_id FROM users WHERE email = $1', [user.email]
+    const { rowCount, rows } = await pool.query(
+      'SELECT user_id FROM users WHERE email=$1',
+      [user.email]
     );
-    if (rows.length === 0) return res.status(404).send('Student not found');
-    const userId = rows[0].user_id;           // π.χ. 11
+    if (rowCount === 0) return res.status(404).send('Student not found');
+    const userId = rows[0].user_id;
 
-    /* 2. Φέρνουμε ΟΛΑ τα review-requests */
-    const reviews = await pool.query(
-      `SELECT r.review_id,
-              r.reason,
-              r.status,          -- pending | accepted | rejected
-              r.response,
-              g.class_name,
-              g.semester,
-              g.grade            -- ΤΩΡΙΝΟΣ βαθμός (αν άλλαξε, φαίνεται εδώ)
-       FROM   review_requests r
-       JOIN   grades g ON r.grade_id = g.grades_id
-       WHERE  r.student_id = $1::text
-       ORDER  BY r.review_id DESC`,
+    const { rows: reviews } = await pool.query(
+      `SELECT r.review_id, r.reason, r.status, r.response,
+              g.class_name, g.semester, g.grade
+       FROM review_requests r
+       JOIN grades g ON r.grade_id = g.grades_id
+       WHERE r.student_id = $1
+       ORDER BY r.review_id DESC`,
       [userId]
     );
-
-    res.json(reviews.rows);
+    res.json(reviews);
   } catch (err) {
-    console.error('SQL-ERROR:', err.message);
+    console.error('[GET /reviews/student] Error:', err);
     res.status(500).send('Failed to fetch review status');
   }
 });
-
 
 app.listen(5006, () => {
   console.log('Review service running on port 5006');

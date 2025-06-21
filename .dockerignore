@@ -1,0 +1,21 @@
+# Git & IDE αρχεία
+.git
+.gitignore
+.vscode
+*.log
+
+# node_modules όλων των φακέλων
+node_modules
+*/node_modules
+
+# Frontend (δεν το χρειάζονται τα backend images)
+frontend-app
+
+# Μεγάλα docs / pdf
+*.pdf
+architecture
+docs
+
+# Οτιδήποτε άλλο βαρύ / προσωρινό
+npm-debug.log
+.DS_Store

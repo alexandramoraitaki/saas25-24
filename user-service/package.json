@@ -1,20 +1,27 @@
-{ 
-"name": "user-service", 
-"version": "1.0.0", 
-"description": "", 
-"main": "index.js", 
-"scripts": { 
-"start": "node index.js" 
-}, 
-"dependencies": { 
-"bcrypt": "^6.0.0", 
-"dotenv": "^16.5.0", 
-"express": "^5.1.0", 
-"multer": "^2.0.0", 
-"pg": "^8.16.0", 
-"xlsx": "^0.18.5" 
-}, 
-"devDependencies": { 
-"nodemon": "^3.1.10" 
-}
+{
+  "name": "user-service",
+  "version": "1.0.0",
+  "description": "Manages user authentication, registration, and role-based access.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@clearsky/common": "file:../common",
+    "amqplib": "^0.10.8",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.15.6",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
 }
