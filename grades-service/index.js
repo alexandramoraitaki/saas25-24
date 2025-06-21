@@ -54,17 +54,19 @@ app.post('/grades/upload', upload.single('file'), async (req, res) => {
 
       // 1. αποθήκευση
       await pool.query(
-        `INSERT INTO grades
-         (student_id, full_name, email, semester, class_name, grading_scale, grade)
-         VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        `INSERT INTO grades (
+     student_id, full_name, email, semester, class_name,
+     grading_scale, grade, uploaded_by
+   ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
         [
           studentId,
-          row['Ονοματεπώνυμο'],
-          row['Ακαδημαϊκό E-mail'],
-          semester,
-          className,
-          row['Κλίμακα βαθμολόγησης'],
-          row['Βαθμολογία']
+          row["Ονοματεπώνυμο"],
+          row["Ακαδημαϊκό E-mail"],
+          row["Περίοδος δήλωσης"],
+          row["Τμήμα Τάξης"],
+          row["Κλίμακα βαθμολόγησης"],
+          row["Βαθμολογία"],
+          user.email
         ]
       );
 
@@ -163,6 +165,21 @@ app.get('/grades/semester/:id', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send('Error fetching semester grades');
+  }
+});
+
+app.get('/grades/teacher/:email', async (req, res) => {
+  const { email } = req.params;
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM grades WHERE uploaded_by = $1',
+      [email]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error fetching teacher grades');
   }
 });
 

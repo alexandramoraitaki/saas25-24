@@ -1,7 +1,5 @@
-
-
 services:
-  
+
   postgres:
     image: postgres:15
     container_name: postgres
@@ -20,11 +18,11 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
     ports:
-      - "5672:5672"    # AMQP port
-      - "15672:15672"  # Management UI
+      - "5672:5672" # AMQP port
+      - "15672:15672" # Management UI
     healthcheck:
       # τρέχει rabbitmq-diagnostics status και αναμένει επιτυχία
-      test: ["CMD", "rabbitmq-diagnostics", "status"]
+      test: [ "CMD", "rabbitmq-diagnostics", "status" ]
       interval: 10s
       timeout: 5s
       retries: 5
