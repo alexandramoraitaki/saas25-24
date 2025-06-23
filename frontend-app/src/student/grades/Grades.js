@@ -3,7 +3,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import '../../App.css';
 
-const api = axios.create({ baseURL: 'http://localhost:8080' });
+import { api, API_GATEWAY, gradesService} from '../services/apiClients';
+
 
 export default function Grades() {
   const [grades, setGrades] = useState([]);

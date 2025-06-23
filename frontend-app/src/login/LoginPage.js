@@ -15,10 +15,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     try {
-      const res = await axios.post("http://localhost:8080/users/login", {
-        email,
-        password,
-      });
+      const res = await axios.post("/users/login", { email, password });
 
       localStorage.setItem("email", res.data.email);
       localStorage.setItem("role", res.data.role);

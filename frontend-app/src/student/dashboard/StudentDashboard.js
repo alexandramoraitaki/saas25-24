@@ -4,6 +4,9 @@ import '../../App.css';
 import { useState } from 'react';
 import axios from 'axios';
 
+import { apiGateway } from '../services/apiClients'
+
+
 import {
   FaGraduationCap,
   FaPaperPlane,
@@ -105,7 +108,7 @@ const StudentDashboard = () => {
               onClick={async () => {
                 try {
                   setMessage('');
-                  const res = await axios.patch('http://localhost:8080/users/change-password', {
+                  await apiGateway.patch('/users/change-password', {
                     email,
                     oldPassword,
                     newPassword

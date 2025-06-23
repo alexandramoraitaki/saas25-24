@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 
-const apiGateway = axios.create({ baseURL: 'http://localhost:8080' });
-const statsService = axios.create({ baseURL: 'http://localhost:5004' });
+import { apiGateway, statsService } from '../services/apiClients'
+
 
 const ClassStatsTeacher = () => {
   const [grades, setGrades] = useState([]);

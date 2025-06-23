@@ -4,6 +4,8 @@ import axios from 'axios';
 import * as XLSX from 'xlsx';
 import '../../App.css';
 
+import { gradesService } from '../services/apiClients';
+
 export default function UploadFinal() {
     const [mode, setMode] = useState('finalize'); // 'finalize' or 'update'
     const [file, setFile] = useState(null);
@@ -71,7 +73,7 @@ export default function UploadFinal() {
             fd.append('file', file);
 
             await axios.patch(
-                'http://localhost:5003/grades/update',
+                '/grades/update',
                 fd,
                 {
                     headers: {
@@ -99,11 +101,7 @@ export default function UploadFinal() {
         try {
             setBusy(true);
             setMessage('⏳ Finalizing grades…');
-            const url =
-                `http://localhost:5003/grades/finalize/class/` +
-                encodeURIComponent(course) +
-                `/semester/` +
-                encodeURIComponent(period);
+            const path = `/grades/finalize/class/${encodeURIComponent(course)}/semester/${encodeURIComponent(period)}`;
 
             const res = await axios.patch(url, null, {
                 headers: {

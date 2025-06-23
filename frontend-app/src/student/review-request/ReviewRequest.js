@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API = 'http://localhost:8080';   // API-Gateway
-const REVIEW_API = 'http://localhost:5006';   // review-service
+import { api, API_GATEWAY, REVIEW_API } from '../services/apiClients';
+
 
 export default function ReviewRequest() {
   const [grades, setGrades] = useState([]);

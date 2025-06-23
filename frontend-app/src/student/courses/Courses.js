@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import '../../App.css';
 
-const api = axios.create({
-    baseURL: 'http://localhost:8080',
-});
+import { apiGateway,gradesService} from '../services/apiClients'
+
 
 const Courses = () => {
     const [courses, setCourses] = useState([]);

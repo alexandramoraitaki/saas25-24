@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import '../../App.css';
 
+import { reviewService } from '../services/apiClients';
+
 
 export default function RespondReview() {
   const { id } = useParams();
@@ -14,7 +16,9 @@ export default function RespondReview() {
   const submit = async e => {
     e.preventDefault();
     try {
-      await axios.patch(`http://localhost:5006/reviews/${id}`, { status, response: msg }, {
+      await reviewService.patch(
+        `/reviews/${id}`, 
+        { status, response: msg }, {
         headers: {
           'x-user-email': localStorage.getItem('email'),
           'x-user-role': 'teacher'

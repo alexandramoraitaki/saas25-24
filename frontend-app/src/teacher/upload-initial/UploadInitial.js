@@ -4,6 +4,10 @@ import axios from 'axios';
 import * as XLSX from 'xlsx';
 import '../../App.css';
 
+import { gradesService } from '../services/apiClients';
+
+
+
 export default function UploadInitial() {
   const [file, setFile] = useState(null);
   const fileInputRef = useRef(null);   // <-- define ref
@@ -78,9 +82,7 @@ export default function UploadInitial() {
       setUploading(true);
       setMessage('⏳ Checking for existing initial grades…');
 
-      const { data } = await axios.get(
-        'http://localhost:5003/grades/check-initial',
-        {
+      await apiGateway.patch('/grades/check-initial', {
           params: { course, semester: period },
           headers: {
             'x-user-email': localStorage.getItem('email'),
@@ -101,7 +103,7 @@ export default function UploadInitial() {
       fd.append('course', course);
       fd.append('period', period);
 
-      await axios.post('http://localhost:5003/grades/upload', fd, {
+      await axios.post('/grades/upload', fd, {
         headers: {
           'x-user-email': localStorage.getItem('email'),
           'x-user-role': 'teacher'

@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../../App.css';
 
-const API = 'http://localhost:5006'; // review-service
-const GATEWAY = 'http://localhost:8080'; // API Gateway
+import { gradesService, reviewService } from '../services/apiClients'
 
 export default function ReviewRequests() {
   const [courses, setCourses] = useState([]);
@@ -18,7 +17,7 @@ export default function ReviewRequests() {
   useEffect(() => {
     const email = localStorage.getItem('email');
     axios
-      .get(`${GATEWAY}/grades/teacher/${email}`, {
+      .get(`/grades/teacher/${email}`, {
         headers: {
           'x-user-email': email,
           'x-user-role': 'teacher'
@@ -37,7 +36,7 @@ export default function ReviewRequests() {
     try {
       setLoading(true); setError('');
       const { data } = await axios.get(
-        `${API}/reviews/class/${encodeURIComponent(selectedCourse)}`,
+        `/reviews/class/${encodeURIComponent(selectedCourse)}`,
         {
           headers: {
             'x-user-email': localStorage.getItem('email'),
@@ -60,7 +59,7 @@ export default function ReviewRequests() {
     if (!status || !response) return alert('Fill in all the fields.');
 
     try {
-      await axios.patch(`${API}/reviews/${reviewId}`, {
+      await axios.patch(`/reviews/${reviewId}`, {
         status,
         response,
         new_grade: status === 'accepted' ? new_grade : undefined
