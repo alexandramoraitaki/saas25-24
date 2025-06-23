@@ -26,7 +26,7 @@ const Courses = () => {
             })
             .then((res) => {
                 const uniqueCourses = Array.from(
-                    new Map(res.data.map((c) => [c.class_name, c])).values()
+                    new Map(res.data.map((c) => [`${c.class_name}-${c.semester}`, c])).values()
                 );
                 setCourses(uniqueCourses);
             })
@@ -34,19 +34,29 @@ const Courses = () => {
     }, []);
 
     return (
-        <div className="container mx-auto px-4 py-6">
-            <h2 className="text-2xl font-bold mb-4">📚 Τα Μαθήματά Μου</h2>
+        <div className="page-container">
+            <h2 className="page-title text-white-force">My Courses 📚 </h2>
 
             {error && <p className="text-red-600">{error}</p>}
 
-            <ul className="list-disc pl-6 space-y-2">
-                {courses.map((course, index) => (
-                    <li key={index}>
-                        {course.class_name} ({course.semester}) –{' '}
-                        {course.finalized ? 'FINAL' : 'OPEN'}
-                    </li>
-                ))}
-            </ul>
+            <table className="table-base">
+                <thead>
+                    <tr>
+                        <th>Course</th>
+                        <th>Semester</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {courses.map((course, index) => (
+                        <tr key={index}>
+                            <td>{course.class_name}</td>
+                            <td>{course.semester}</td>
+                            <td>{course.finalized ? 'FINAL' : 'OPEN'}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 };

@@ -6,8 +6,17 @@ const xlsx = require('xlsx');
 const { Pool } = require('pg');
 const { getChannel } = require('@clearsky/common');
 
+const normalize = s =>
+  String(s || '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const cors = require('cors');
+
 const app = express();
 app.use(express.json());
+
+app.use(cors());
 
 const upload = multer({ dest: 'uploads/' });
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -26,6 +35,37 @@ async function getChan() {
   }
   return chanPromise;
 }
+
+// ─── 2) Check-initial endpoint ──────────────────────────────────────────────────
+// must come BEFORE /grades/upload etc.
+app.get('/grades/check-initial', async (req, res) => {
+  console.log('>>> GET /grades/check-initial hit', req.query);
+  const user = getUserFromHeaders(req);
+  if (user.role !== 'teacher') {
+    return res.status(403).send('Forbidden');
+  }
+
+  const course = req.query.course;
+  const semester = req.query.semester;
+  if (!course || !semester) {
+    return res.status(400).send('Missing course or semester');
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `SELECT COUNT(*)::int AS count
+         FROM grades
+        WHERE class_name = $1
+          AND semester   = $2`,
+      [course, semester]
+    );
+    return res.json({ count: rows[0].count });
+  } catch (err) {
+    console.error('Error checking initial grades:', err);
+    return res.status(500).send('Internal error');
+  }
+});
+
 
 // --- 1) Upload initial grades
 app.post('/grades/upload', upload.single('file'), async (req, res) => {
@@ -49,8 +89,8 @@ app.post('/grades/upload', upload.single('file'), async (req, res) => {
     for (const row of data) {
       const rawId = row['Αριθμός Μητρώου'];
       const studentId = String(rawId).padStart(8, '0');
-      const className = row['Τμήμα Τάξης'];
-      const semester = row['Περίοδος δήλωσης'];
+      const className = normalize(row['Τμήμα Τάξης']);
+      const semester = normalize(row['Περίοδος δήλωσης']);
 
       // 1. αποθήκευση
       await pool.query(
@@ -62,8 +102,8 @@ app.post('/grades/upload', upload.single('file'), async (req, res) => {
           studentId,
           row["Ονοματεπώνυμο"],
           row["Ακαδημαϊκό E-mail"],
-          row["Περίοδος δήλωσης"],
-          row["Τμήμα Τάξης"],
+          semester,     // <- normalized
+          className,    // <- normalized
           row["Κλίμακα βαθμολόγησης"],
           row["Βαθμολογία"],
           user.email
@@ -123,6 +163,87 @@ app.patch('/grades/finalize/class/:name/semester/:sem', async (req, res) => {
     res.status(500).send('Finalization failed');
   }
 });
+
+// --- Bulk‐update grades from Excel, with protected RabbitMQ publish ---
+app.patch(
+  '/grades/update',
+  upload.single('file'),
+  async (req, res) => {
+    console.log('>>> PATCH /grades/update hit');
+    const user = getUserFromHeaders(req);
+    if (user.role !== 'teacher') {
+      return res.status(403).send('Forbidden: Only teachers');
+    }
+
+    // Verify teacher in DB
+    const { rows: teachers } = await pool.query(
+      'SELECT 1 FROM users WHERE email=$1 AND role=$2',
+      [user.email, 'teacher']
+    );
+    if (!teachers.length) {
+      return res.status(403).send('Forbidden: Invalid teacher credentials');
+    }
+
+    try {
+      // 1) Read the Excel file
+      const workbook = xlsx.readFile(req.file.path);
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = xlsx.utils.sheet_to_json(sheet, { range: 2 });
+
+      // Normalize helper and extract course/period from fixed cells
+      const normalize = s => String(s || '').replace(/\s+/g, ' ').trim();
+      const course = normalize(sheet['E4']?.v);
+      const period = normalize(sheet['D4']?.v);
+
+      // 2) Loop through rows and UPDATE only changed grades
+      let updated = 0;
+      for (const row of rows) {
+        const studentId = String(row['Αριθμός Μητρώου'] || '').padStart(8, '0');
+        const newGrade = row['Βαθμολογία'];
+
+        const cur = await pool.query(
+          `SELECT grade
+             FROM grades
+            WHERE student_id = $1
+              AND class_name  = $2
+              AND semester    = $3`,
+          [studentId, course, period]
+        );
+
+        if (cur.rowCount && cur.rows[0].grade !== newGrade) {
+          await pool.query(
+            `UPDATE grades
+               SET grade       = $1,
+                   uploaded_by = $2
+             WHERE student_id = $3
+               AND class_name  = $4
+               AND semester    = $5`,
+            [newGrade, user.email, studentId, course, period]
+          );
+          updated++;
+        }
+      }
+
+      // 3) Publish RabbitMQ event, but don’t let failures block the response
+      const chan = await getChan();
+      try {
+        chan.publish(
+          'clearSKY.events',
+          'grades.updated',
+          Buffer.from(JSON.stringify({ className: course, semester: period }))
+        );
+      } catch (mqErr) {
+        console.error('RabbitMQ publish failed, continuing without blocking:', mqErr);
+      }
+
+      // 4) Send success response to client
+      return res.send(`Updated ${updated} grades.`);
+    } catch (err) {
+      console.error('Bulk update failed:', err);
+      return res.status(500).send('Bulk update failed');
+    }
+  }
+);
 
 // --- 3) Ανακτήσεις χωρίς RabbitMQ
 app.get('/grades/class/:name', async (req, res) => {

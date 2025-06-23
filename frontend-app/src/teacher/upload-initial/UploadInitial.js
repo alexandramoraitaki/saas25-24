@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+// src/teacher/upload-initial/UploadInitial.js
+import React, { useState, useRef } from 'react';  // <-- import useRef
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 import '../../App.css';
 
 export default function UploadInitial() {
   const [file, setFile] = useState(null);
+  const fileInputRef = useRef(null);   // <-- define ref
+
   const [course, setCourse] = useState('');
   const [period, setPeriod] = useState('');
   const [count, setCount] = useState(null);
@@ -22,86 +25,104 @@ export default function UploadInitial() {
     '2023-2024 ΕΑΡ 2023'
   ];
 
-  const normalize = s => String(s).replace(/\s+/g, ' ').trim();
-
-  const readFile = file =>
-    new Promise((resolve, reject) => {
+  const normalize = s => String(s || '').replace(/\s+/g, ' ').trim();
+  const readFile = f =>
+    new Promise((res, rej) => {
       const reader = new FileReader();
-      reader.onload = e => resolve(e.target.result);
-      reader.onerror = err => reject(err);
-      reader.readAsArrayBuffer(file);
+      reader.onload = e => res(e.target.result);
+      reader.onerror = err => rej(err);
+      reader.readAsArrayBuffer(f);
     });
 
   const handleParse = async e => {
     e.preventDefault();
-    if (!file) return setMessage('❌ Επιλέξτε αρχείο πρώτα');
+    if (!file) {
+      setMessage('❌ Please select a .xlsx file first');
+      return;
+    }
     try {
       setParsing(true);
-      setMessage('🔍 Ανάγνωση αρχείου...');
+      setMessage('🔍 Parsing file...');
       const data = await readFile(file);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rawCourse = sheet['E4']?.v || '';
-      const rawPeriod = sheet['D4']?.v || '';
-      const normalizedCourse = normalize(rawCourse);
-      const normalizedPeriod = normalize(rawPeriod);
-      const json = XLSX.utils.sheet_to_json(sheet, { range: 2 });
-      setCourse(courseOptions.includes(normalizedCourse) ? normalizedCourse : '');
-      setPeriod(periodOptions.includes(normalizedPeriod) ? normalizedPeriod : '');
-      setCount(json.length);
-      setMessage('🔍 Το αρχείο αναλύθηκε. Επιβεβαιώστε ή ακυρώστε.');
+      const wb = XLSX.read(data, { type: 'array' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rawC = sheet['E4']?.v || '';
+      const rawP = sheet['D4']?.v || '';
+      const normC = normalize(rawC);
+      const normP = normalize(rawP);
+      const rows = XLSX.utils.sheet_to_json(sheet, { range: 2 });
+
+      setCourse(courseOptions.includes(normC) ? normC : '');
+      setPeriod(periodOptions.includes(normP) ? normP : '');
+      setCount(rows.length);
+      setMessage('✅ File parsed. Please confirm or cancel.');
     } catch (err) {
       console.error('Parsing error:', err);
-      setMessage('❌ Σφάλμα ανάγνωσης αρχείου');
+      setMessage('❌ Error parsing file');
     } finally {
       setParsing(false);
     }
   };
 
   const handleConfirm = async () => {
-    if (!file) return setMessage('❌ Επιλέξτε αρχείο πρώτα');
-    if (!course || !period) return setMessage('❌ Μη έγκυρα Course ή Period');
+    if (!file) {
+      setMessage('❌ Please select a file first');
+      return;
+    }
+    if (!course || !period) {
+      setMessage('❌ Invalid course or semester');
+      return;
+    }
 
     try {
       setUploading(true);
-      setMessage('⏳ Αποστολή στο server...');
+      setMessage('⏳ Checking for existing initial grades…');
 
+      const { data } = await axios.get(
+        'http://localhost:5003/grades/check-initial',
+        {
+          params: { course, semester: period },
+          headers: {
+            'x-user-email': localStorage.getItem('email'),
+            'x-user-role': 'teacher'
+          }
+        }
+      );
+      if (data.count > 0) {
+        setMessage(
+          `⚠️ Initial grades already uploaded for "${course}" (${period})`
+        );
+        return;
+      }
+
+      setMessage('⏳ Uploading initial grades…');
       const fd = new FormData();
       fd.append('file', file);
       fd.append('course', course);
       fd.append('period', period);
 
-      // Debug: log form data entries
-      for (let pair of fd.entries()) console.log(pair[0], pair[1]);
-
-      const response = await axios.post(
-        'http://localhost:5003/grades/upload',
-        fd,
-        {
-          headers: {
-            'x-user-email': localStorage.getItem('email'),
-            'x-user-role': 'teacher',
-            // Let browser set Content-Type
-          }
+      await axios.post('http://localhost:5003/grades/upload', fd, {
+        headers: {
+          'x-user-email': localStorage.getItem('email'),
+          'x-user-role': 'teacher'
         }
-      );
+      });
 
-      console.log('Upload response:', response);
-      setMessage(`✅ Ανέβηκαν ${count} βαθμολογίες για το μάθημα "${course}" (${period})`);
+      setMessage(
+        `✅ Uploaded ${count} initial grades for "${course}" (${period})`
+      );
+      // reset React state
       setFile(null);
       setCourse('');
       setPeriod('');
       setCount(null);
+      // clear the actual file‐input so re-selecting same file fires onChange
+      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err) {
-      // Enhanced error logging
       console.error('Upload error:', err);
-      if (err.response) {
-        console.error('Status:', err.response.status);
-        console.error('Data:', err.response.data);
-        setMessage(`❌ Αποτυχία: ${err.response.status} ${err.response.data?.message || ''}`);
-      } else {
-        setMessage('❌ Αποτυχία ανεβάσματος στο server');
-      }
+      const st = err.response?.status;
+      const dt = err.response?.data?.message || err.message;
+      setMessage(`❌ Upload failed: ${st} ${dt}`);
     } finally {
       setUploading(false);
     }
@@ -113,56 +134,137 @@ export default function UploadInitial() {
     setPeriod('');
     setCount(null);
     setMessage('');
+    // also clear the actual file‐input
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
     <div className="page-container">
       <div className="card">
-        <h2>ΑΝΕΒΑΣΜΑ ΑΡΧΙΚΩΝ ΒΑΘΜΟΛΟΓΙΩΝ</h2>
-        <form onSubmit={handleParse} className="form-grid" style={{ gridTemplateColumns: 'auto auto', alignItems: 'center', gap: '1rem' }}>
-          <label htmlFor="file-upload" className="btn btn-outline">
-            {file ? file.name : 'Επιλέξτε αρχείο .xlsx'}
+        <h2>Initial Grades Upload</h2>
+        <form
+          onSubmit={handleParse}
+          className="form-grid"
+          style={{
+            gridTemplateColumns: 'auto auto',
+            alignItems: 'center',
+            gap: '1rem'
+          }}
+        >
+          <label
+            htmlFor="file-upload"
+            style={{
+              display: 'inline-block',
+              padding: '8px 16px',
+              backgroundColor: '#f1f5f9',
+              color: '#111827',
+              border: '1px solid #cbd5e1',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              fontWeight: 500,
+              transition: 'background-color 0.2s ease',
+            }}
+            onMouseEnter={(e) => (e.target.style.backgroundColor = '#e2e8f0')}
+            onMouseLeave={(e) => (e.target.style.backgroundColor = '#f1f5f9')}
+          >
+            {file ? file.name : 'Select .xlsx file'}
           </label>
           <input
+            ref={fileInputRef}              // <-- attach ref here
             id="file-upload"
             type="file"
             accept=".xlsx"
-            onChange={e => { setFile(e.target.files[0]); setMessage(''); }}
+            onChange={e => {
+              setFile(e.target.files[0]);
+              setMessage('');
+            }}
             style={{ display: 'none' }}
           />
-          <button type="submit" className="btn btn-primary" disabled={parsing || uploading}>
-            {parsing ? 'Ανάλυση...' : 'Ανάλυση αρχείου'}
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={parsing || uploading}
+          >
+            {parsing ? 'Parsing…' : 'Analyze File'}
           </button>
         </form>
       </div>
 
-      <div className="card">
-        <h2>Πληροφορίες Αρχείου</h2>
-        <div className="form-grid" style={{ gridTemplateColumns: 'auto 1fr', rowGap: '1rem', columnGap: '1rem', alignItems: 'center' }}>
-          <label htmlFor="course-select" style={{ textAlign: 'right' }}>Μάθημα</label>
-          <select id="course-select" value={course} onChange={e => setCourse(e.target.value)} className="input">
-            <option value="">-- Επιλέξτε μάθημα --</option>
-            {courseOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-          </select>
+      {count !== null && (
+        <div className="card" style={{ marginTop: '1rem' }}>
+          <h2>File Details</h2>
+          <div
+            className="form-grid"
+            style={{
+              gridTemplateColumns: 'auto 1fr',
+              rowGap: '1rem',
+              columnGap: '1rem',
+              alignItems: 'center'
+            }}
+          >
+            <label style={{ textAlign: 'right' }}>Course</label>
+            <select
+              value={course}
+              onChange={e => setCourse(e.target.value)}
+              className="input"
+              disabled={uploading}
+            >
+              <option value="">-- Select course --</option>
+              {courseOptions.map(o => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
 
-          <label htmlFor="period-select" style={{ textAlign: 'right' }}>Εξεταστική Περίοδος</label>
-          <select id="period-select" value={period} onChange={e => setPeriod(e.target.value)} className="input">
-            <option value="">-- Επιλέξτε περίοδο --</option>
-            {periodOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-          </select>
+            <label style={{ textAlign: 'right' }}>Semester</label>
+            <select
+              value={period}
+              onChange={e => setPeriod(e.target.value)}
+              className="input"
+              disabled={uploading}
+            >
+              <option value="">-- Select semester --</option>
+              {periodOptions.map(o => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
 
-          <label htmlFor="count" style={{ textAlign: 'right' }}>Αριθμός Μαθητών</label>
-          <input id="count" type="text" value={count ?? ''} readOnly className="input" />
+            <label style={{ textAlign: 'right' }}>Students Count</label>
+            <input
+              type="text"
+              readOnly
+              className="input"
+              value={count}
+            />
+          </div>
+          <div className="btn-group" style={{ marginTop: '1rem' }}>
+            <button
+              onClick={handleConfirm}
+              className="btn btn-success"
+              disabled={!file || !course || !period || uploading}
+            >
+              {uploading ? 'Uploading…' : 'Confirm'}
+            </button>
+            <button
+              onClick={handleCancel}
+              className="btn btn-secondary"
+              disabled={uploading}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
-        <div className="btn-group">
-          <button onClick={handleConfirm} className="btn btn-success" disabled={!file || !course || !period || uploading}>
-            {uploading ? 'Αποστολή...' : 'CONFIRM'}
-          </button>
-          <button onClick={handleCancel} className="btn btn-secondary" disabled={uploading || parsing}>CANCEL</button>
-        </div>
-      </div>
+      )}
 
-      {message && <div className="card"><p className="status">{message}</p></div>}
+      {message && (
+        <div className="card" style={{ marginTop: '1rem' }}>
+          <p className="status">{message}</p>
+        </div>
+      )}
     </div>
   );
 }

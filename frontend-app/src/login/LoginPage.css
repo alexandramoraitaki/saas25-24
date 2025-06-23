@@ -18,20 +18,20 @@ html,
 
 /* ΚΕΝΤΡΙΚΗ ΔΟΜΗ */
 .container {
-  height: auto;
-  padding: 40px 20px;
+  height: 100vh !important;
+  padding: 20px;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 /* ΚΑΡΤΑ */
-.card {
+.login-page .card {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 14px;
-  padding: 20px 22px;
-  max-width: 100px;
-  width: 80%;
+  padding: 16px 20px;
+  max-width: 460px !important;
+  width: 100%;
   backdrop-filter: blur(10px);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   text-align: center;
@@ -82,6 +82,7 @@ html,
 /* ΦΟΡΜΑ */
 .form {
   width: 100%;
+  height: 70%;
   text-align: center;
   align-items: flex-start;
 

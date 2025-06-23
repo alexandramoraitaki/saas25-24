@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API        = 'http://localhost:8080';   // API-Gateway
+const API = 'http://localhost:8080';   // API-Gateway
 const REVIEW_API = 'http://localhost:5006';   // review-service
 
 export default function ReviewRequest() {
-  const [grades,     setGrades]     = useState([]);
-  const [myReviews,  setMyReviews]  = useState([]);
+  const [grades, setGrades] = useState([]);
+  const [myReviews, setMyReviews] = useState([]);
   const [selectedId, setSelectedId] = useState('');
-  const [reason,     setReason]     = useState('');
-  const [message,    setMessage]    = useState('');
+  const [reason, setReason] = useState('');
+  const [message, setMessage] = useState('');
 
   /* ---------- 1. Φόρτωση βαθμών & αιτημάτων ---------- */
   useEffect(() => {
@@ -18,14 +18,14 @@ export default function ReviewRequest() {
 
     const headers = {
       'x-user-email': localStorage.getItem('email'),
-      'x-user-role' : 'student'
+      'x-user-role': 'student'
     };
 
     /* βαθμοί (μόνο OPEN) */
     axios
       .get(`/grades/student/${studentId}`, { baseURL: API, headers })
       .then(res => setGrades(res.data.filter(g => !g.finalized)))
-      .catch(()  => setMessage('❌ Σφάλμα φόρτωσης βαθμών'));
+      .catch(() => setMessage('❌ Σφάλμα φόρτωσης βαθμών'));
 
     /* review-requests */
     axios
@@ -40,7 +40,7 @@ export default function ReviewRequest() {
 
     const headers = {
       'x-user-email': localStorage.getItem('email'),
-      'x-user-role' : 'student'
+      'x-user-role': 'student'
     };
 
     try {
@@ -65,8 +65,8 @@ export default function ReviewRequest() {
 
   /* ---------- 3. UI ---------- */
   return (
-    <div className="page-container">
-      <h2 className="page-title">Αίτημα Αναθεώρησης Βαθμού</h2>
+    <div className="review-container">
+      <h2 className="page-title text-white-force">📬 Grade Review Request</h2>
 
       {message && <p className="message">{message}</p>}
 
@@ -75,10 +75,10 @@ export default function ReviewRequest() {
         value={selectedId}
         onChange={e => setSelectedId(parseInt(e.target.value, 10))}
       >
-        <option value="">Επέλεξε μάθημα…</option>
+        <option value="">Select a Course</option>
         {grades.map(g => (
           <option key={g.grades_id} value={g.grades_id}>
-            {g.class_name} — Εξ: {g.semester} — Βαθμός: {g.grade}
+            {g.class_name} — Semester: {g.semester} — Grade: {g.grade}
           </option>
         ))}
       </select>
@@ -86,28 +86,30 @@ export default function ReviewRequest() {
       <textarea
         className="input"
         rows={3}
-        placeholder="Λόγος αναθεώρησης"
+        placeholder="Reason for review request"
         value={reason}
         onChange={e => setReason(e.target.value)}
       />
 
-      <button className="btn btn-primary" onClick={handleSubmit}>Υποβολή</button>
+      <button className="btn btn-primary" onClick={handleSubmit}>Submit</button>
 
-      <hr className="my-6" />
-      <h3 className="text-lg font-semibold mb-2">Τα Αιτήματά μου</h3>
+      <hr className="my-6 border-slate-600" />
+
+      <h3 className="text-xl font-semibold mb-4 text-white-force">My Requests</h3>
 
       {myReviews.length === 0
-        ? <p className="text-gray-500">Δεν έχεις καταχωρήσει κάποιο αίτημα.</p>
+        ? <p className="text-slate-400">Δεν έχεις καταχωρήσει κάποιο αίτημα.</p>
         : myReviews.map(r => (
-            <div key={r.review_id} className="request-card">
-              <p><strong>Μάθημα:</strong> {r.class_name}</p>
-              <p><strong>Τρέχων βαθμός:</strong> {r.grade}</p>
-              <p><strong>Κατάσταση:</strong> {r.status}</p>
-              {r.response && (
-                <p><strong>Απάντηση:</strong> {r.response}</p>
-              )}
-            </div>
-          ))}
+          <div key={r.review_id} className="request-card">
+            <p><strong>Course:</strong> {r.class_name}</p>
+            <p><strong>Current Grade:</strong> {r.grade}</p>
+            <p><strong>Status:</strong> {r.status}</p>
+            {r.response && (
+              <p><strong>Response:</strong> {r.response}</p>
+            )}
+          </div>
+        ))}
     </div>
   );
+
 }

@@ -34,13 +34,14 @@ async function startConsumer(retries = 5, delayMs = 3000) {
         const { studentId, className, semester } = JSON.parse(msg.content.toString());
 
         await pool.query(
-          `INSERT INTO review_requests (grade_id, student_id, class_name, semester, status)
-           VALUES (
-             (SELECT grades_id FROM grades WHERE student_id=$1 AND class_name=$2 AND semester=$3),
-             $1, $2, $3, 'pending'
-           )`,
+          `INSERT INTO review_requests (grade_id, student_id, status)
+          VALUES (
+            (SELECT grades_id FROM grades WHERE student_id=$1 AND class_name=$2 AND semester=$3),
+            $1, 'pending'
+          )`,
           [studentId, className, semester]
         );
+
 
         console.log(`➕ Auto-created review request for ${studentId} / ${className}`);
         chan.ack(msg);
@@ -90,22 +91,36 @@ app.post('/reviews', async (req, res) => {
   }
 });
 
-// GET /reviews/class/:name – teacher views pending requests for a class
+// GET  /reviews/class/:name  – teacher: όλα τα pending στο μάθημα
 app.get('/reviews/class/:name', async (req, res) => {
   const user = getUserFromHeaders(req);
-  if (user.role !== 'teacher') return res.status(403).send('Forbidden: Only teachers');
+  if (user.role !== 'teacher') return res.sendStatus(403);
+
+  const { name } = req.params;
+
+  const q = `
+    SELECT r.review_id,
+           r.reason,
+           r.status,
+           r.response,
+           g.class_name,
+           g.semester,
+           g.grade          AS current_grade,      -- τρέχων (ίσως ήδη αλλαγμένος)
+           u.student_id     AS am,                 -- Αριθμός Μητρώου
+           u.full_name
+    FROM   review_requests r
+    JOIN   grades  g ON r.grade_id = g.grades_id
+    LEFT   JOIN users   u ON u.user_id::text = r.student_id   -- cast int→text
+    WHERE  g.class_name = $1
+      AND  r.status      = 'pending'
+    ORDER  BY r.review_id DESC
+  `;
+
   try {
-    const { rows } = await pool.query(
-      `SELECT r.review_id, r.reason, r.status, r.response,
-              g.class_name, g.semester, g.grade
-       FROM review_requests r
-       JOIN grades g ON r.grade_id = g.grades_id
-       WHERE g.class_name = $1 AND r.status = 'pending'`,
-      [req.params.name]
-    );
+    const { rows } = await pool.query(q, [name]);
     res.json(rows);
   } catch (err) {
-    console.error('[GET /reviews/class/:name] Error:', err);
+    console.error('SQL-ERROR:', err.message);
     res.status(500).send('Failed to fetch review requests');
   }
 });

@@ -1,27 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../../App.css';
 
-const API = 'http://localhost:5006';
-
-const COURSE = {
-  id: 1,
-  code: 'ΤΕΧΝΟΛΟΓΙΑ ΛΟΓΙΣΜΙΚΟΥ   (3205)',
-  name: 'ΤΕΧΝΟΛΟΓΙΑ ΛΟΓΙΣΜΙΚΟΥ   (3205)'
-};
+const API = 'http://localhost:5006'; // review-service
+const GATEWAY = 'http://localhost:8080'; // API Gateway
 
 export default function ReviewRequests() {
+  const [courses, setCourses] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState('');
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [openFormId, setOpenFormId] = useState(null); // ποιο αίτημα έχει ανοιχτή φόρμα
-  const [formData, setFormData] = useState({}); // dynamic per review_id
+  const [openFormId, setOpenFormId] = useState(null);
+  const [formData, setFormData] = useState({});
+
+  // 🔄 Φόρτωση μαθημάτων
+  useEffect(() => {
+    const email = localStorage.getItem('email');
+    axios
+      .get(`${GATEWAY}/grades/teacher/${email}`, {
+        headers: {
+          'x-user-email': email,
+          'x-user-role': 'teacher'
+        }
+      })
+      .then(res => {
+        const unique = Array.from(new Set(res.data.map(g => g.class_name)));
+        setCourses(unique);
+        if (unique.length > 0) setSelectedCourse(unique[0]);
+      })
+      .catch(() => setError('❌ Failed to load courses'));
+  }, []);
 
   const loadRequests = async () => {
+    if (!selectedCourse) return alert('Select a course first.');
     try {
       setLoading(true); setError('');
       const { data } = await axios.get(
-        `${API}/reviews/class/${encodeURIComponent(COURSE.code)}`,
+        `${API}/reviews/class/${encodeURIComponent(selectedCourse)}`,
         {
           headers: {
             'x-user-email': localStorage.getItem('email'),
@@ -30,16 +46,18 @@ export default function ReviewRequests() {
         }
       );
       setRequests(data);
-      if (data.length === 0) setError('Δεν υπάρχουν αιτήματα για το μάθημα.');
+      if (data.length === 0) setError('No requests found for this course.');
     } catch {
-      setError('❌ Πρόβλημα επικοινωνίας ή δεν βρέθηκαν αιτήματα');
+      setError('❌ Problem loading requests');
       setRequests([]);
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (reviewId) => {
     const { status, response, new_grade } = formData[reviewId] || {};
-    if (!status || !response) return alert('Συμπλήρωσε όλα τα πεδία.');
+    if (!status || !response) return alert('Fill in all the fields.');
 
     try {
       await axios.patch(`${API}/reviews/${reviewId}`, {
@@ -52,44 +70,70 @@ export default function ReviewRequests() {
           'x-user-role': 'teacher'
         }
       });
-      alert('✅ Υποβλήθηκε!');
+      alert('✅ Submitted!');
       setOpenFormId(null);
-      loadRequests(); // refresh
+      loadRequests();
     } catch {
-      alert('❌ Σφάλμα κατά την υποβολή');
+      alert('❌ Failed to submit');
     }
   };
 
   return (
     <div className="page-container">
-      <h2 className="page-title">Αιτήματα Αναθεώρησης</h2>
+      <h2 className="page-title text-white-force">Review Requests</h2>
 
       <div className="form-grid" style={{ maxWidth: 600 }}>
-        <select className="input" disabled>
-          <option value={COURSE.code}>{COURSE.name}</option>
+
+        <select
+          className="input"
+          value={selectedCourse}
+          onChange={(e) => setSelectedCourse(e.target.value)}
+        >
+          <option value="">-- Select a Course --</option>
+          {courses.map((c, i) => (
+            <option key={i} value={c}>{c}</option>
+          ))}
         </select>
-        <button className="btn btn-primary" onClick={loadRequests} disabled={loading}>
-          {loading ? 'Φόρτωση…' : 'Φόρτωση Αιτημάτων'}
+
+        <button
+          style={{
+            width: '150px',
+            backgroundColor: '#4f46e5',
+            height: '30px',            // πιο χαμηλό
+            color: '#fff',
+            fontSize: '0.8rem',        // πιο μικρό κείμενο
+            padding: '2px 10px',       // μικρότερο padding
+            borderRadius: '5px',
+            border: 'none',
+            cursor: 'pointer',
+            lineHeight: '1'            // αποφυγή extra ύψους
+          }}
+          onClick={loadRequests}
+          disabled={loading}
+        >
+          {loading ? 'Loading…' : 'Load Requests'}
         </button>
+
       </div>
 
       {error && <p className="error">{error}</p>}
-      {loading && <p className="loading">Παρακαλώ περιμένετε…</p>}
+      {loading && <p className="loading">Please wait…</p>}
 
       <div className="request-list">
         {requests.map((r) => (
           <div key={r.review_id} className="request-card">
-            <p><strong>Μάθημα:</strong> {r.class_name}</p>
-            <p><strong>Εξεταστική:</strong> {r.semester}</p>
-            <p><strong>Φοιτητής:</strong> {r.full_name || '—'}</p>
-            <p><strong>Αίτημα:</strong> {r.reason}</p>
+            <p><strong>Course:</strong> {r.class_name}</p>
+            <p><strong>Semester:</strong> {r.semester}</p>
+            <p><strong>Student:</strong> {r.full_name || '—'} ({r.am || 'ID;'})</p>
+            <p><strong>Current Grade:</strong> {r.current_grade}</p>
+            <p><strong>Request:</strong> {r.reason}</p>
 
             {openFormId !== r.review_id && (
               <button
                 className="btn btn-secondary btn-sm"
                 onClick={() => setOpenFormId(r.review_id)}
               >
-                ↪ Απάντηση
+                ↪ Response
               </button>
             )}
 
@@ -108,14 +152,14 @@ export default function ReviewRequests() {
                     }))
                   }
                 >
-                  <option value="">-- Επιλογή --</option>
-                  <option value="accepted">✅ Αποδοχή</option>
-                  <option value="rejected">❌ Απόρριψη</option>
+                  <option value="">-- Choose --</option>
+                  <option value="accepted">✅ Accept</option>
+                  <option value="rejected">❌ Reject</option>
                 </select>
 
                 <textarea
                   className="input"
-                  placeholder="Μήνυμα προς φοιτητή"
+                  placeholder="Message to Student"
                   rows={3}
                   value={formData[r.review_id]?.response || ''}
                   onChange={e =>
@@ -133,7 +177,7 @@ export default function ReviewRequests() {
                   <input
                     className="input"
                     type="number"
-                    placeholder="Νέος βαθμός"
+                    placeholder="New Grade"
                     value={formData[r.review_id]?.new_grade || ''}
                     onChange={e =>
                       setFormData(prev => ({
@@ -149,10 +193,10 @@ export default function ReviewRequests() {
 
                 <div className="btn-group">
                   <button className="btn btn-primary btn-sm" onClick={() => handleSubmit(r.review_id)}>
-                    Υποβολή
+                    Submit
                   </button>
                   <button className="btn btn-secondary btn-sm" onClick={() => setOpenFormId(null)}>
-                    Άκυρο
+                    Cancel
                   </button>
                 </div>
               </div>
@@ -160,6 +204,6 @@ export default function ReviewRequests() {
           </div>
         ))}
       </div>
-    </div>
+    </div >
   );
 }

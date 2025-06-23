@@ -1,5 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import axios from 'axios';
 import '../../App.css';
 import {
   FaUpload,
@@ -14,6 +16,11 @@ export default function TeacherDashboard() {
   const name = localStorage.getItem('full_name') || 'Instructor';
   const email = localStorage.getItem('email') || 'instructor@example.com';
   const institution = localStorage.getItem('institution') || 'National Technical University of Athens';
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [message, setMessage] = useState('');
+
 
   const hour = new Date().getHours();
   const timeGreeting =
@@ -53,7 +60,95 @@ export default function TeacherDashboard() {
         <h3 className="profile-floating-title">🧑‍🏫 {name}</h3>
         <p>{email}</p>
         <p>{institution}</p>
+
+        <button
+          onClick={() => setShowChangePassword((prev) => !prev)}
+          style={{
+            marginTop: '0.5rem',
+            backgroundColor: '#006699',
+            padding: '4px 8px',
+            fontSize: '0.75rem',
+            height: '30px',
+            lineHeight: '1',
+            borderRadius: '4px',
+            border: 'none',
+            color: 'white',
+            cursor: 'pointer'
+          }}
+        >
+          Change Password
+        </button>
+
+
+        {showChangePassword && (
+          <div style={{ marginTop: '1rem' }}>
+            <input
+              type="password"
+              placeholder="Old Password"
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
+              className="input"
+              style={{ marginBottom: '0.5rem' }}
+            />
+            <input
+              type="password"
+              placeholder="New Password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="input"
+              style={{ marginBottom: '0.5rem' }}
+            />
+            <button
+              onClick={async () => {
+                try {
+                  setMessage('');
+                  const res = await axios.patch('http://localhost:8080/users/change-password', {
+                    email,
+                    oldPassword,
+                    newPassword
+                  });
+                  setMessage('✅ Password changed!');
+                  setOldPassword('');
+                  setNewPassword('');
+                  setShowChangePassword(false);
+                  setTimeout(() => setMessage(''), 3000);
+                } catch (err) {
+                  setMessage('❌ ' + (err.response?.data || 'Error changing password'));
+                }
+              }}
+              style={{
+                backgroundColor: '#16a34a',
+                padding: '4px 10px',
+                fontSize: '0.75rem',
+                height: '30px',
+                lineHeight: '1',
+                borderRadius: '4px',
+                border: 'none',
+                color: 'white',
+                cursor: 'pointer'
+              }}
+            >
+              Submit
+            </button>
+          </div>
+        )}
+
+        {/*  ΤΟ ΜΗΝΥΜΑ ΕΜΦΑΝΙΖΕΤΑΙ ΠΑΝΤΑ ΕΔΩ, ακόμα κι αν η φόρμα κλείσει */}
+        {message && (
+          <p
+            style={{
+              marginTop: '0.5rem',
+              fontSize: '0.9rem',
+              fontWeight: 'bold',
+              color: message.startsWith('✅') ? 'green' : 'red',
+            }}
+          >
+            {message}
+          </p>
+        )}
+
       </div>
+
 
       <div className="center-screen">
         <div className="page-container">

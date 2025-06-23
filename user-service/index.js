@@ -125,11 +125,11 @@ app.post('/login', async (req, res) => {
 
     res.json({
       message: 'Login successful',
-      user_id:     user.user_id,
-      student_id:  String(user.student_id).padStart(8, '0'),
-      role:        user.role,
-      full_name:   user.full_name,
-      email:       user.email
+      user_id: user.user_id,
+      student_id: String(user.student_id).padStart(8, '0'),
+      role: user.role,
+      full_name: user.full_name,
+      email: user.email
     });
   } catch (err) {
     console.error('[LOGIN ERROR]', err);
@@ -157,7 +157,7 @@ app.patch('/change-password', async (req, res) => {
       [newHash, email]
     );
 
-    res.send('Password updated successfully');
+    res.json({ message: 'Password updated successfully' });
   } catch (err) {
     console.error('[CHANGE PASSWORD ERROR]', err);
     res.status(500).send('Password change failed');
