@@ -1,12 +1,18 @@
-# stage 1: install & build
+# frontend-app/Dockerfile
+
+# 1) Build stage
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY frontend-app/package*.json ./
+
+# Αντέγραψε μόνο τα package.json για cache
+COPY package*.json ./
 RUN npm ci
-COPY frontend-app/ .
+
+# Αντέγραψε όλον τον κώδικα (όχι “frontend-app/…”, απλώς “.”)
+COPY . .
 RUN npm run build
 
-# stage 2: serve with nginx
+# 2) Production stage
 FROM nginx:stable-alpine
 COPY --from=builder /app/build /usr/share/nginx/html
 EXPOSE 80
