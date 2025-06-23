@@ -12,6 +12,13 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db/initdb:/docker-entrypoint-initdb.d
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   rabbitmq:
     image: rabbitmq:3-management
