@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import '../../App.css';
 
-import { reviewService } from '../services/apiClients';
+import { reviewService } from '../../services/apiClients';
 
 
 export default function RespondReview() {

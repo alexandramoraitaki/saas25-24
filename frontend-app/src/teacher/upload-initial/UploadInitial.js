@@ -4,7 +4,7 @@ import axios from 'axios';
 import * as XLSX from 'xlsx';
 import '../../App.css';
 
-import { gradesService } from '../services/apiClients';
+import { gradesService } from '../../services/apiClients';
 
 
 

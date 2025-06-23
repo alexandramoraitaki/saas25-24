@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-import { api, API_GATEWAY, REVIEW_API } from '../services/apiClients';
+import { api, API_GATEWAY, REVIEW_API } from '../../services/apiClients';
 
 
 export default function ReviewRequest() {

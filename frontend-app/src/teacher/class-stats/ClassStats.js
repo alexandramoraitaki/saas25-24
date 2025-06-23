@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 
-import { apiGateway, statsService } from '../services/apiClients'
+import { apiGateway, statsService } from '../../services/apiClients'
 
 
 const ClassStatsTeacher = () => {

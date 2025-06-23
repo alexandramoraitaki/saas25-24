@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import '../../App.css';
 
-import { api, API_GATEWAY, gradesService} from '../services/apiClients';
+import { api, API_GATEWAY, gradesService} from '../../services/apiClients';
 
 
 export default function Grades() {

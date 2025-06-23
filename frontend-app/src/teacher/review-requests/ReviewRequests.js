@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../../App.css';
 
-import { gradesService, reviewService } from '../services/apiClients'
+import { gradesService, reviewService } from '../../services/apiClients'
 
 export default function ReviewRequests() {
   const [courses, setCourses] = useState([]);

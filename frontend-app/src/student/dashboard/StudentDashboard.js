@@ -2,9 +2,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../App.css';
 import { useState } from 'react';
-import axios from 'axios';
 
-import { apiGateway } from '../services/apiClients'
+import { apiGateway } from '../../services/apiClients'
 
 
 import {
