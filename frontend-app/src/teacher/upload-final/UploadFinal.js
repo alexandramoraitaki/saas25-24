@@ -102,7 +102,7 @@ export default function UploadFinal() {
             setMessage('⏳ Finalizing grades…');
             const path = `/grades/finalize/class/${encodeURIComponent(course)}/semester/${encodeURIComponent(period)}`;
 
-            const res = await gradesService.patch(url, null, {
+            const res = await gradesService.patch(path, null, {
                 headers: {
                     'x-user-email': localStorage.getItem('email') || '',
                     'x-user-role': 'teacher'

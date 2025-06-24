@@ -22,7 +22,7 @@ export default function ReviewRequest() {
 
     /* βαθμοί (μόνο OPEN) */
     gradesService
-      .get(`/grades/student/${studentId}`, { baseURL: API, headers })
+      .get(`/grades/student/${studentId}`, { headers })
       .then(res => setGrades(res.data.filter(g => !g.finalized)))
       .catch(() => setMessage('❌ Σφάλμα φόρτωσης βαθμών'));
 
@@ -44,7 +44,7 @@ export default function ReviewRequest() {
 
     try {
       await reviewService.post(
-        `${REVIEW_API}/reviews`,
+        `/reviews`,
         { grade_id: selectedId, reason },
         { headers }
       );
@@ -54,8 +54,8 @@ export default function ReviewRequest() {
       setReason('');
 
       /* ανανέωση λίστας */
-      const { data } = await reviewService.get(`${REVIEW_API}/reviews/student`, { headers });
-      setMyReviews(data);
+      const res = await reviewService.get(`/reviews/student`, { headers });
+      setMyReviews(res.data);
     } catch (err) {
       console.error('❌ Λεπτομέρεια:', err?.response?.data || err.message);
       setMessage('❌ Σφάλμα κατά την υποβολή');
