@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { gradesService, REVIEW_API, reviewService } from '../../services/apiClients';
+import { gradesService, reviewService } from '../../services/apiClients';
 
 
 export default function ReviewRequest() {
@@ -28,7 +28,7 @@ export default function ReviewRequest() {
 
     /* review-requests */
     reviewService
-      .get(`${REVIEW_API}/reviews/student`, { headers })
+      .get(`/reviews/student`, { headers })
       .then(res => setMyReviews(res.data))
       .catch(err => console.warn('⚠️ Δεν φορτώθηκαν τα αιτήματα:', err.message));
   }, []);
