@@ -33,7 +33,8 @@ export default function ReviewRequests() {
     if (!selectedCourse) return alert('Select a course first.');
     try {
       setLoading(true); setError('');
-      reviewService(`/reviews/class/${encodeURIComponent(selectedCourse)}`,
+      const { data } = await reviewService.get(
+        `/reviews/class/${encodeURIComponent(selectedCourse)}`,
         {
           headers: {
             'x-user-email': localStorage.getItem('email'),

@@ -82,7 +82,10 @@ export default function UploadInitial() {
       setUploading(true);
       setMessage('⏳ Checking for existing initial grades…');
 
-      await gradesService.patch('/grades/check-initial', {
+      const { data } = await gradesService.patch(
+        '/grades/check-initial',
+        { course, semester: period },
+        {
           params: { course, semester: period },
           headers: {
             'x-user-email': localStorage.getItem('email'),
