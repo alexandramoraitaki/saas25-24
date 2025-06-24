@@ -164,7 +164,7 @@ export default function UploadFinal() {
                             }}
                         >
                             <label
-                                htmlFor="file-upload"
+                                htmlFor="file-upd"
                                 style={{
                                     display: 'inline-block',
                                     padding: '8px 16px',
