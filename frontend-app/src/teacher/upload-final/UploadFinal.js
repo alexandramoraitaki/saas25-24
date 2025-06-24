@@ -1,6 +1,5 @@
 // src/teacher/upload-final/UploadFinal.js
 import React, { useState } from 'react';
-import axios from 'axios';
 import * as XLSX from 'xlsx';
 import '../../App.css';
 
@@ -72,7 +71,7 @@ export default function UploadFinal() {
             const fd = new FormData();
             fd.append('file', file);
 
-            await axios.patch(
+            await gradesService.patch(
                 '/grades/update',
                 fd,
                 {
@@ -103,7 +102,7 @@ export default function UploadFinal() {
             setMessage('⏳ Finalizing grades…');
             const path = `/grades/finalize/class/${encodeURIComponent(course)}/semester/${encodeURIComponent(period)}`;
 
-            const res = await axios.patch(url, null, {
+            const res = await gradesService.patch(url, null, {
                 headers: {
                     'x-user-email': localStorage.getItem('email') || '',
                     'x-user-role': 'teacher'

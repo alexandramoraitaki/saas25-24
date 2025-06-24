@@ -6,3 +6,5 @@ export const apiGateway   = axios.create({ baseURL: `${protocol}//${hostname}:80
 export const statsService = axios.create({ baseURL: `${protocol}//${hostname}:5004` });
 export const gradesService= axios.create({ baseURL: `${protocol}//${hostname}:5003` });
 export const reviewService= axios.create({ baseURL: `${protocol}//${hostname}:5006` });
+
+export const api          = apiGateway;

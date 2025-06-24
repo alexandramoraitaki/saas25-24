@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 
-import { api, API_GATEWAY, REVIEW_API } from '../../services/apiClients';
+import { gradesService, REVIEW_API, reviewService } from '../../services/apiClients';
 
 
 export default function ReviewRequest() {
@@ -22,13 +21,13 @@ export default function ReviewRequest() {
     };
 
     /* βαθμοί (μόνο OPEN) */
-    axios
+    gradesService
       .get(`/grades/student/${studentId}`, { baseURL: API, headers })
       .then(res => setGrades(res.data.filter(g => !g.finalized)))
       .catch(() => setMessage('❌ Σφάλμα φόρτωσης βαθμών'));
 
     /* review-requests */
-    axios
+    reviewService
       .get(`${REVIEW_API}/reviews/student`, { headers })
       .then(res => setMyReviews(res.data))
       .catch(err => console.warn('⚠️ Δεν φορτώθηκαν τα αιτήματα:', err.message));
@@ -44,7 +43,7 @@ export default function ReviewRequest() {
     };
 
     try {
-      await axios.post(
+      await reviewService.post(
         `${REVIEW_API}/reviews`,
         { grade_id: selectedId, reason },
         { headers }
@@ -55,7 +54,7 @@ export default function ReviewRequest() {
       setReason('');
 
       /* ανανέωση λίστας */
-      const { data } = await axios.get(`${REVIEW_API}/reviews/student`, { headers });
+      const { data } = await reviewService.get(`${REVIEW_API}/reviews/student`, { headers });
       setMyReviews(data);
     } catch (err) {
       console.error('❌ Λεπτομέρεια:', err?.response?.data || err.message);

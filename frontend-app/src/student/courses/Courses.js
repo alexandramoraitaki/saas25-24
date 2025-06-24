@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import '../../App.css';
 
-import { apiGateway,gradesService} from '../../services/apiClients'
+import {gradesService} from '../../services/apiClients'
 
 
 const Courses = () => {
@@ -16,8 +15,7 @@ const Courses = () => {
             return;
         }
 
-        api
-            .get(`/grades/student/${id}`, {
+        gradesService.get(`/grades/student/${id}`, {
                 headers: {
                     'x-user-email': localStorage.getItem('email'),
                     'x-user-role': localStorage.getItem('role') || 'student',

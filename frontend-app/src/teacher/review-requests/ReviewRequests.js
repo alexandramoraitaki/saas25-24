@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import '../../App.css';
 
-import { gradesService, reviewService } from '../../services/apiClients'
+import { gradesService,reviewService } from '../../services/apiClients'
 
 export default function ReviewRequests() {
   const [courses, setCourses] = useState([]);
@@ -16,8 +15,7 @@ export default function ReviewRequests() {
   // 🔄 Φόρτωση μαθημάτων
   useEffect(() => {
     const email = localStorage.getItem('email');
-    axios
-      .get(`/grades/teacher/${email}`, {
+    gradesService.get(`/grades/teacher/${email}`, {
         headers: {
           'x-user-email': email,
           'x-user-role': 'teacher'
@@ -35,8 +33,7 @@ export default function ReviewRequests() {
     if (!selectedCourse) return alert('Select a course first.');
     try {
       setLoading(true); setError('');
-      const { data } = await axios.get(
-        `/reviews/class/${encodeURIComponent(selectedCourse)}`,
+      reviewService(`/reviews/class/${encodeURIComponent(selectedCourse)}`,
         {
           headers: {
             'x-user-email': localStorage.getItem('email'),
@@ -59,7 +56,7 @@ export default function ReviewRequests() {
     if (!status || !response) return alert('Fill in all the fields.');
 
     try {
-      await axios.patch(`/reviews/${reviewId}`, {
+      await reviewService.patch(`/reviews/${reviewId}`, {
         status,
         response,
         new_grade: status === 'accepted' ? new_grade : undefined

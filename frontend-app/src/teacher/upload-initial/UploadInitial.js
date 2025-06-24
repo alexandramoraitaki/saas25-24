@@ -1,6 +1,6 @@
 // src/teacher/upload-initial/UploadInitial.js
 import React, { useState, useRef } from 'react';  // <-- import useRef
-import axios from 'axios';
+
 import * as XLSX from 'xlsx';
 import '../../App.css';
 
@@ -82,7 +82,7 @@ export default function UploadInitial() {
       setUploading(true);
       setMessage('⏳ Checking for existing initial grades…');
 
-      await apiGateway.patch('/grades/check-initial', {
+      await gradesService.patch('/grades/check-initial', {
           params: { course, semester: period },
           headers: {
             'x-user-email': localStorage.getItem('email'),

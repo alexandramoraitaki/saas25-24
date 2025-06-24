@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import '../../App.css';
 
-import { api, API_GATEWAY, gradesService} from '../../services/apiClients';
-
+// Εισάγουμε μόνο τον gradesService
+import { gradesService } from '../../services/apiClients';
 
 export default function Grades() {
   const [grades, setGrades] = useState([]);
@@ -18,7 +17,7 @@ export default function Grades() {
       return;
     }
 
-    api
+    gradesService
       .get(`/grades/student/${id}`, {
         headers: {
           'x-user-email': localStorage.getItem('email'),
@@ -30,14 +29,18 @@ export default function Grades() {
   }, []);
 
   const handleReview = (className) => {
-    navigate(`/student/review-request?class=${encodeURIComponent(className)}`);
+    navigate(
+      `/student/review-request?class=${encodeURIComponent(className)}`
+    );
   };
 
   return (
     <div className="page-container">
       <h2 className="page-title text-white-force">My Grades 📑</h2>
 
-      {error && <p className="text-red-600 mb-4 text-center">{error}</p>}
+      {error && (
+        <p className="text-red-600 mb-4 text-center">{error}</p>
+      )}
 
       <table className="table-base">
         <thead>
@@ -60,7 +63,10 @@ export default function Grades() {
                 {g.finalized ? (
                   <span className="text-gray-400">—</span>
                 ) : (
-                  <button className="btn btn-primary" onClick={() => handleReview(g.class_name)}>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => handleReview(g.class_name)}
+                  >
                     Αναθεώρηση
                   </button>
                 )}

@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import axios from 'axios';
 import '../../App.css';
 import {
   FaUpload,
@@ -9,6 +8,8 @@ import {
   FaCheckCircle,
   FaChartBar
 } from 'react-icons/fa';
+
+import { apiGateway } from '../../services/apiClients'
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
@@ -102,7 +103,7 @@ export default function TeacherDashboard() {
               onClick={async () => {
                 try {
                   setMessage('');
-                  const res = await axios.patch('http://localhost:8080/users/change-password', {
+                  const res = await apiGateway.patch('/users/change-password', {
                     email,
                     oldPassword,
                     newPassword
