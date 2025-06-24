@@ -82,9 +82,8 @@ export default function UploadInitial() {
       setUploading(true);
       setMessage('⏳ Checking for existing initial grades…');
 
-      const { data } = await gradesService.patch(
+      const { data } = await gradesService.get(
         '/grades/check-initial',
-        { course, semester: period },
         {
           params: { course, semester: period },
           headers: {
@@ -106,7 +105,7 @@ export default function UploadInitial() {
       fd.append('course', course);
       fd.append('period', period);
 
-      await axios.post('/grades/upload', fd, {
+      await gradesService.post('/grades/upload', fd, {
         headers: {
           'x-user-email': localStorage.getItem('email'),
           'x-user-role': 'teacher'
