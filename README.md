@@ -111,9 +111,9 @@ RabbitMQ ensures services remain decoupled and scalable.
 
 ## 👨‍💻 Team
 
-- Katerina Bakratsa
-- Fany Kalogianni
-- Alexandra Moraitaki
-- Thanasis Tsiatouras
+-Fany Kalogianni https://github.com/fanykl
+-Alexandra Moraitaki 
+-Thanasis Tsiatouras https://github.com/Thanasis-Tsiatouras
+-Katerina Bakratsa https://github.com/katerinabakratsa
 
 ---
